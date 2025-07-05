@@ -1,81 +1,156 @@
+import { Header } from '../components/Header';
 import { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase';
+//import { useNavigate } from 'react-router';
+
+interface Cliente {
+    id: string;
+    created_at: string;
+    nombre: string;
+    descripcion: string;
+    email: string;
+    telefono: string;
+    pais: string;
+    ciudad: string;
+    barrio: string;
+    tipo_cliente: string;
+    estado: string;
+    temperatura: string;
+    vendedor_id: string;
+    ultima_interaccion: string;
+}
+
 
 export const Home = () => {
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [loading, setLoading] = useState(false);
+    //const navigate = useNavigate();
 
     useEffect(() => {
-        // Obtener datos del usuario al cargar el componente
-        const getUserData = async () => {
+        const fetchClientes = async () => {
             try {
-                const { data: { user } } = await supabase.auth.getUser();
-                setUser(user);
+                setLoading(true);
+                const { data, error } = await supabase
+                    .from('clientes')
+                    .select(`*`);
+
+                if (error) {
+                    throw error;
+                }
+
+                if (data) {
+                    setClientes(data);
+                    console.log("data", data);
+                }
             } catch (error) {
-                console.error('Error al obtener datos del usuario:', error);
+                console.error('Error al obtener los clientes:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        getUserData();
+        fetchClientes();
     }, []);
-
-    const handleLogout = async () => {
-        try {
-            await supabase.auth.signOut();
-        } catch (error) {
-            console.error('Error al cerrar sesión:', error);
-        }
-    };
-
+    
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
+       <div className="min-h-screen bg-gray-50">
+            <Header />
+            <div className="container mx-auto px-4 py-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">Panel Principal</h1>
+                    <h1 className="text-2xl font-bold">Clientes</h1>
                     <button 
-                        onClick={handleLogout}
-                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                    >
-                        Cerrar Sesión
+                        //onClick={() => navigate('/add-cliente')}
+                        className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                        Añadir Cliente
                     </button>
                 </div>
-
+                
                 {loading ? (
-                    <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                    </div>
-                ) : user ? (
-                    <div className="bg-gray-50 p-4 rounded-md">
-                        <h2 className="text-xl font-semibold mb-4">Información del Usuario</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-sm text-gray-500">Email</p>
-                                <p className="font-medium">{user.email}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">ID de Usuario</p>
-                                <p className="font-medium">{user.id}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Último inicio de sesión</p>
-                                <p className="font-medium">
-                                    {new Date(user.last_sign_in_at).toLocaleString('es-ES')}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Creado el</p>
-                                <p className="font-medium">
-                                    {new Date(user.created_at).toLocaleString('es-ES')}
-                                </p>
-                            </div>
-                        </div>
+                    <div className="flex justify-center items-center py-10">
+                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
                     </div>
                 ) : (
-                    <p className="text-center text-gray-500">No se encontró información del usuario</p>
+                    <div className="bg-white rounded-lg shadow overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Último Contacto
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Nombre
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Teléfono
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Estado
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Temperatura
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Vendedor Asignado
+                                    </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Fecha para Recontactar
+                                    </th>
+                                </tr>
+                            </thead>
+                            
+                             <tbody className="bg-white divide-y divide-gray-200">
+                                {clientes.length > 0 ? (
+                                    clientes.map((cliente: Cliente, index) => (
+                                        <tr key={cliente.id || index}>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {cliente.ultima_interaccion}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {cliente.nombre}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {cliente.telefono}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                    cliente.estado === 'Activo' 
+                                                        ? 'bg-green-100 text-green-800' 
+                                                        : 'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                    {cliente.estado}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                                    cliente.temperatura === 'Caliente' 
+                                                        ? 'bg-red-100 text-red-800' 
+                                                        : cliente.temperatura === 'Cálido'
+                                                            ? 'bg-yellow-100 text-yellow-800'
+                                                            : 'bg-blue-100 text-blue-800'
+                                                }`}>
+                                                    {cliente.temperatura}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {cliente.vendedor_id}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {cliente.created_at}
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={7} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                            No hay clientes disponibles
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody> 
+                        </table>
+                    </div>
                 )}
             </div>
-        </div>
+       </div>
     );
 };
