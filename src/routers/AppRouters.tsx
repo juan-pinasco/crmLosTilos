@@ -3,6 +3,7 @@ import { ProtectedRoute } from "../components/ProtectedRoute";
 import { Auth } from "../pages/Auth";
 import { Home } from "../pages/Home";
 import { ProfileClient } from "../pages/ProfileClient";
+import { CreateClient } from "../pages/CreateClient";
 
 export const AppRouters = () => {
     return(
@@ -13,6 +14,7 @@ export const AppRouters = () => {
             {/* Rutas protegidas */}
             <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<Home />} />
+                <Route path="/create-client" element={<CreateClient />} />
                 <Route path="/profile-client/:id" element={<ProfileClient />} />
                 {/* Aquí puedes añadir más rutas protegidas */}
             </Route>
