@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase';
+import { GetSession } from '../data/AuthsCrud';
 
 export const Header = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -7,9 +8,9 @@ export const Header = () => {
   useEffect(() => {
     // Obtener la sesión actual
     const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        setUserEmail(data.session.user.email || null);
+      const session = await GetSession();
+      if (session) {
+        setUserEmail(session.email || null);
       }
     };
 
