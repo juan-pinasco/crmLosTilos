@@ -64,7 +64,7 @@ export const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -140,7 +140,11 @@ export const Home = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {clientes.length > 0 ? (
                   clientes.map((cliente: Cliente, index) => (
-                    <tr key={cliente.id || index}>
+                    <tr 
+                      key={cliente.id || index}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => navigate(`/profile-client/${cliente.id}`)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatearFecha(cliente.ultima_interaccion, true)}
                       </td>
@@ -186,7 +190,10 @@ export const Home = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <button
                           className="text-red-600 hover:text-red-900 cursor-pointer"
-                          onClick={() => handleDeleteClient(cliente.id)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Evita que el evento de clic se propague a la fila
+                            handleDeleteClient(cliente.id);
+                          }}
                         >
                           <Trash size={18} />
                         </button>
