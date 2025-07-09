@@ -10,7 +10,7 @@ import { Header } from "../components/Header";
 // Importar los nuevos componentes
 import { ObservacionesCliente } from "../components/cliente/ObservacionesCliente";
 import { InformacionCliente } from "../components/cliente/InformacionCliente";
-import { RecontactoCliente } from "../components/cliente/RecontactoCliente";
+import { RecontactoCliente } from "../components/cliente/recontactoCliente/RecontactoCliente";
 
 export const ProfileClient = () => {
   const { id } = useParams<{ id: string }>();
