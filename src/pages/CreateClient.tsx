@@ -6,6 +6,9 @@ import { GetSession } from "../data/AuthsCrud";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
 import { useNavigate } from "react-router";
+import { TIPOS_CLIENTE, TIPO_CLIENTE_DEFAULT } from "../constants/tiposCliente";
+import { ESTADOS_CLIENTE, ESTADO_CLIENTE_DEFAULT } from "../constants/estadosCliente";
+import { TEMPERATURAS_CLIENTE, TEMPERATURA_CLIENTE_DEFAULT } from "../constants/temperaturasCliente";
 
 export const CreateClient = () => {
   const navigate = useNavigate();
@@ -18,12 +21,14 @@ export const CreateClient = () => {
     pais: "",
     ciudad: "",
     barrio: "",
-    tipo_cliente: "Potencial",
-    estado: "Nuevo",
-    temperatura: "Fría",
+    tipo_cliente: TIPO_CLIENTE_DEFAULT,
+    estado: ESTADO_CLIENTE_DEFAULT,
+    temperatura: TEMPERATURA_CLIENTE_DEFAULT,
     vendedor_id: "",
     ultima_interaccion: new Date().toISOString(),
     created_by: "", // Campo añadido para indicar quién creó el cliente
+    empleo: "", // Nuevo campo para el empleo del cliente
+    fecha_recontacto: null, // Inicializado como null para compatibilidad con el tipo timestamp en Supabase
   });
 
   const [loading, setLoading] = useState(false);
@@ -246,10 +251,11 @@ export const CreateClient = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full py-3 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
-                  <option value="Potencial">Potencial</option>
-                  <option value="Activo">Activo</option>
-                  <option value="Inactivo">Inactivo</option>
-                  <option value="Antiguo">Antiguo</option>
+                  {TIPOS_CLIENTE.map((tipo) => (
+                    <option key={tipo} value={tipo}>
+                      {tipo}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -267,11 +273,11 @@ export const CreateClient = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full py-3 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
-                  <option value="Nuevo">Nuevo</option>
-                  <option value="En seguimiento">En seguimiento</option>
-                  <option value="Negociación">Negociación</option>
-                  <option value="Cerrado">Cerrado</option>
-                  <option value="Perdido">Perdido</option>
+                  {ESTADOS_CLIENTE.map((estado) => (
+                    <option key={estado} value={estado}>
+                      {estado}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -289,9 +295,11 @@ export const CreateClient = () => {
                   onChange={handleChange}
                   className="mt-1 block w-full py-3 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
-                  <option value="Fría">Fría</option>
-                  <option value="Tibia">Tibia</option>
-                  <option value="Caliente">Caliente</option>
+                  {TEMPERATURAS_CLIENTE.map((temperatura) => (
+                    <option key={temperatura} value={temperatura}>
+                      {temperatura}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -317,6 +325,25 @@ export const CreateClient = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Nuevo campo: Empleo */}
+              <div>
+                <label
+                  htmlFor="empleo"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Empleo
+                </label>
+                <input
+                  type="text"
+                  name="empleo"
+                  id="empleo"
+                  value={formData.empleo}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-3"
+                />
+              </div>
+              {/* La fecha de recontacto no se incluye en el formulario de creación */}
             </div>
 
             <div className="mt-8 flex justify-end">

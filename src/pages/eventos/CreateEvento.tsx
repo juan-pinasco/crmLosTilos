@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
-import { Header } from "../components/Header";
+import { Header } from "../../components/Header";
 import { useNavigate } from "react-router";
-import { crearEvento } from "../data/EventosCrud";
-import { fetchClientes } from "../data/ClientsCrud";
-import { fetchVendedores } from "../data/VendedoresCrud";
-import type { Cliente } from "../types/ClientsType";
-import type { Vendedor } from "../types/SellersType";
-import { GetSession } from "../data/AuthsCrud";
+import { crearEvento } from "../../data/EventosCrud";
+import { fetchClientes } from "../../data/ClientsCrud";
+import { fetchVendedores } from "../../data/VendedoresCrud";
+import type { Cliente } from "../../types/ClientsType";
+import type { Vendedor } from "../../types/SellersType";
+import { GetSession } from "../../data/AuthsCrud";
 import { Search } from "lucide-react";
-import { ESTADOS_TAREA, ESTADO_TAREA_DEFAULT } from "../constants/estadosTareas";
+import { ESTADOS_TAREA, ESTADO_TAREA_DEFAULT } from "../../constants/estadosTareas";
 
 export const CreateEvento = () => {
   const navigate = useNavigate();

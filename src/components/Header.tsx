@@ -56,10 +56,7 @@ export const Header = () => {
           {userEmail && (
             <nav className="flex space-x-6">
               <Link to="/" className={`py-2 px-3 font-medium ${isActive('/')}`}>
-                Inicio
-              </Link>
-              <Link to="/create-client" className={`py-2 px-3 font-medium ${isActive('/create-client')}`}>
-                Nuevo Cliente
+                Clientes
               </Link>
               <Link to="/eventos" className={`py-2 px-3 font-medium ${isActive('/eventos')}`}>
                 Eventos

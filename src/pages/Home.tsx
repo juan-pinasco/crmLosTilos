@@ -3,217 +3,138 @@ import { useState, useEffect } from "react";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
 import { useNavigate } from "react-router";
-import { Trash } from "lucide-react";
-import { fetchClientes, deleteClient } from "../data/ClientsCrud";
+import { fetchClientes } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
-import { formatearFecha } from "../utils/dateUtils";
+import { ClientesTable } from "../components/ClientesTable";
+import { FiltrosCliente } from "../components/FiltrosCliente";
+import type { FiltrosSeleccionados } from "../components/FiltrosCliente";
 
 export const Home = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [filtros, setFiltros] = useState<FiltrosSeleccionados>({
+    tiposCliente: [],
+    estadosCliente: [],
+    temperaturasCliente: []
+  });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setLoading(true);
 
-    // Cargar vendedores
-    const loadVendedores = async () => {
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      setLoading(true);
       try {
+        // Cargar vendedores
         const vendedoresData = await fetchVendedores();
         if (vendedoresData) {
           setVendedores(vendedoresData);
         }
-      } catch (error) {
-        console.error("Error al cargar vendedores:", error);
-      }
-    };
 
-    // Cargar clientes
-    const loadClientes = async () => {
-      try {
+        // Cargar clientes
         const clientesData = await fetchClientes();
         if (clientesData) {
           setClientes(clientesData);
+          setClientesFiltrados(clientesData);
         }
       } catch (error) {
-        console.error("Error al cargar clientes:", error);
+        console.error("Error al cargar datos:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadVendedores();
-    loadClientes();
+    cargarDatos();
   }, []);
 
-  // Función para obtener el nombre del vendedor por su ID.
-  const getNombreVendedor = (vendedorAsignadoId: string) => {
-    const vendedor = vendedores.find((v) => v.id === vendedorAsignadoId); 
-    return vendedor ? vendedor.nombre : vendedorAsignadoId;
+  // Función para recargar los clientes después de eliminar uno
+  const handleClienteDeleted = async () => {
+    setLoading(true);
+    try {
+      const nuevosClientes = await fetchClientes();
+      if (nuevosClientes) {
+        setClientes(nuevosClientes);
+        aplicarFiltros(nuevosClientes, filtros);
+      }
+    } catch (error) {
+      console.error("Error al recargar clientes:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteClient = async (id: string) => {
-    setLoading(true);
-    await deleteClient(id);
-    const nuevosClientes = await fetchClientes();
-    if (nuevosClientes) {
-      setClientes(nuevosClientes);
+  // Función para manejar cambios en los filtros y aplicarlos a la lista de clientes
+  const handleFiltrosChange = (nuevosFiltros: FiltrosSeleccionados) => {
+    setFiltros(nuevosFiltros);
+    aplicarFiltros(clientes, nuevosFiltros);
+  };
+
+  // Función para aplicar los filtros seleccionados a la lista de clientes
+  const aplicarFiltros = (listaClientes: Cliente[], filtrosAplicar: FiltrosSeleccionados) => {
+    // Si no hay filtros seleccionados, mostrar todos los clientes
+    if (
+      filtrosAplicar.tiposCliente.length === 0 &&
+      filtrosAplicar.estadosCliente.length === 0 &&
+      filtrosAplicar.temperaturasCliente.length === 0
+    ) {
+      setClientesFiltrados(listaClientes);
+      return;
     }
-    setLoading(false);
+
+    // Aplicar filtros seleccionados
+    const clientesFiltrados = listaClientes.filter(cliente => {
+      // Verificar si el cliente cumple con los filtros de tipo
+      const cumpleTipo = filtrosAplicar.tiposCliente.length === 0 || 
+        filtrosAplicar.tiposCliente.includes(cliente.tipo_cliente);
+      
+      // Verificar si el cliente cumple con los filtros de estado
+      const cumpleEstado = filtrosAplicar.estadosCliente.length === 0 || 
+        filtrosAplicar.estadosCliente.includes(cliente.estado);
+      
+      // Verificar si el cliente cumple con los filtros de temperatura
+      const cumpleTemperatura = filtrosAplicar.temperaturasCliente.length === 0 || 
+        filtrosAplicar.temperaturasCliente.includes(cliente.temperatura);
+      
+      // El cliente debe cumplir con todos los filtros aplicados
+      return cumpleTipo && cumpleEstado && cumpleTemperatura;
+    });
+
+    setClientesFiltrados(clientesFiltrados);
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      <div className="container mx-auto px-4 py-8">
+      <div className="w-full px-4 md:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Clientes</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Clientes</h1>
           <button
             onClick={() => navigate("/create-client")}
-            className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
-            Añadir Cliente
+            Nuevo Cliente
           </button>
         </div>
-
-        {loading ? (
-          <div className="flex justify-center items-center py-10">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        
+        {/* Contenedor principal que divide la pantalla en dos columnas */}
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Columna izquierda para los filtros */}
+          <div className="md:w-1/6">
+            <FiltrosCliente onFiltrosChange={handleFiltrosChange} />
           </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Último Contacto
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Nombre
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Teléfono
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Estado
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Temperatura
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Vendedor Asignado
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Fecha de creación
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Creado por
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="bg-white divide-y divide-gray-200">
-                {clientes.length > 0 ? (
-                  clientes.map((cliente: Cliente, index) => (
-                    <tr 
-                      key={cliente.id || index}
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => navigate(`/profile-client/${cliente.id}`)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatearFecha(cliente.ultima_interaccion, true)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {cliente.nombre}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {cliente.telefono}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            cliente.estado === "Activo"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {cliente.estado}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            cliente.temperatura === "Caliente"
-                              ? "bg-red-100 text-red-800"
-                              : cliente.temperatura === "Cálido"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
-                        >
-                          {cliente.temperatura}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {getNombreVendedor(cliente.vendedor_id)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatearFecha(cliente.created_at, true)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {cliente.created_by}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button
-                          className="text-red-600 hover:text-red-900 cursor-pointer"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Evita que el evento de clic se propague a la fila
-                            handleDeleteClient(cliente.id);
-                          }}
-                        >
-                          <Trash size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center"
-                    >
-                      No hay clientes disponibles
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          
+          {/* Columna derecha para la tabla */}
+          <div className="md:w-5/6">
+            <ClientesTable 
+              clientes={clientesFiltrados}
+              vendedores={vendedores}
+              loading={loading}
+              onClienteDeleted={handleClienteDeleted}
+            />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

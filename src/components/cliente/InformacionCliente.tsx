@@ -1,7 +1,14 @@
 import { Edit } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Cliente } from "../../types/ClientsType";
 import type { Vendedor } from "../../types/SellersType";
+import type { Evento } from "../../types/EventsType";
 import { formatearFecha } from "../../utils/dateUtils";
+import { fetchEventosByCliente } from "../../data/EventosCrud";
+import { updateFechaRecontacto } from "../../data/ClientsCrud";
+import { ESTADO_CLIENTE_COLORS } from "../../constants/estadosCliente";
+import { TEMPERATURA_CLIENTE_COLORS } from "../../constants/temperaturasCliente";
+import { TIPO_CLIENTE_COLORS } from "../../constants/tiposCliente";
 
 interface InformacionClienteProps {
   cliente: Cliente;
@@ -9,6 +16,13 @@ interface InformacionClienteProps {
 }
 
 export const InformacionCliente = ({ cliente, vendedores }: InformacionClienteProps) => {
+  const [fechaRecontacto, setFechaRecontacto] = useState<string | null>(cliente.fecha_recontacto);
+  
+  // Actualizar el estado local cuando cambie la fecha de recontacto en las props
+  useEffect(() => {
+    setFechaRecontacto(cliente.fecha_recontacto);
+  }, [cliente.fecha_recontacto]);
+
   // Función para mostrar texto vacío en gris claro
   const vacio = () => <span className="text-gray-400">Sin datos</span>;
 
@@ -19,12 +33,54 @@ export const InformacionCliente = ({ cliente, vendedores }: InformacionClientePr
     return vendedor ? vendedor.nombre : vacio();
   };
 
+  // Función para obtener la fecha más lejana de los eventos
+  const obtenerFechaMasLejana = (eventos: Evento[]): string | null => {
+    if (!eventos || eventos.length === 0) return null;
+    
+    // Ordenar eventos por fecha de realización (descendente)
+    const eventosOrdenados = [...eventos].sort((a, b) => {
+      const fechaA = new Date(a.fecha_realizacion).getTime();
+      const fechaB = new Date(b.fecha_realizacion).getTime();
+      return fechaB - fechaA; // Orden descendente para obtener la más lejana primero
+    });
+    
+    // Retornar la fecha más lejana (la primera después de ordenar)
+    return eventosOrdenados[0]?.fecha_realizacion || null;
+  };
+
+  // Cargar eventos del cliente solo al inicializar el componente
+  useEffect(() => {
+    const cargarEventos = async () => {
+      if (cliente.id) {
+        try {
+          const eventosCliente = await fetchEventosByCliente(cliente.id);
+          
+          // Actualizar la fecha de recontacto con la más lejana
+          const fechaMasLejana = obtenerFechaMasLejana(eventosCliente);
+          if (fechaMasLejana) {
+            setFechaRecontacto(fechaMasLejana);
+            
+            // Guardar la fecha de recontacto en la base de datos
+            await updateFechaRecontacto(cliente.id, fechaMasLejana);
+            console.log(`Fecha de recontacto actualizada para cliente ${cliente.id}: ${fechaMasLejana}`);
+          }
+        } catch (error) {
+          console.error("Error al cargar eventos del cliente:", error);
+        }
+      }
+    };
+    
+    // Solo cargar eventos una vez al inicializar el componente
+    // Las actualizaciones posteriores vendrán a través de las props
+    cargarEventos();
+  }, []);
+
   return (
     <div>
       <h1 className="text-3xl font-bold mb-1 text-gray-800">
         {cliente.nombre}
       </h1>
-      <p className="text-gray-600 mb-8">{"Empleo No Proporcionado"}</p>
+      <p className="text-gray-600 mb-8">{cliente.empleo || "Empleo No Proporcionado"}</p>
 
       <div className="pt-6">
         <div className="flex justify-between items-center mb-6">
@@ -47,12 +103,32 @@ export const InformacionCliente = ({ cliente, vendedores }: InformacionClientePr
           {/* Estado */}
           <div className="mb-4">
             <h3 className="text-gray-500 text-sm mb-1">Estado</h3>
-            <p>{cliente.estado || vacio()}</p>
+            {cliente.estado ? (
+              <span
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  ESTADO_CLIENTE_COLORS[cliente.estado] || "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {cliente.estado}
+              </span>
+            ) : (
+              vacio()
+            )}
           </div>
           <div className="border-b-2 border-gray-200 my-4"></div>
           <div className="mb-4">
             <h3 className="text-gray-500 text-sm mb-1">Temperatura</h3>
-            <p>{cliente.temperatura || vacio()}</p>
+            {cliente.temperatura ? (
+              <span
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  TEMPERATURA_CLIENTE_COLORS[cliente.temperatura] || "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {cliente.temperatura}
+              </span>
+            ) : (
+              vacio()
+            )}
           </div>
           <div className="border-b-2 border-gray-200 my-4"></div>
 
@@ -89,7 +165,17 @@ export const InformacionCliente = ({ cliente, vendedores }: InformacionClientePr
           {/* Tipo de cliente */}
           <div className="mb-4">
             <h3 className="text-gray-500 text-sm mb-1">Tipo de cliente</h3>
-            <p>{cliente.tipo_cliente || vacio()}</p>
+            {cliente.tipo_cliente ? (
+              <span
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                  TIPO_CLIENTE_COLORS[cliente.tipo_cliente] || "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {cliente.tipo_cliente}
+              </span>
+            ) : (
+              vacio()
+            )}
           </div>
           <div className="border-b-2 border-gray-200 my-4"></div>
 
@@ -127,6 +213,13 @@ export const InformacionCliente = ({ cliente, vendedores }: InformacionClientePr
                   vacio()}
               </p>
             </div>
+          </div>
+          <div className="border-b-2 border-gray-200 my-4"></div>
+          
+          {/* Fecha de recontacto */}
+          <div className="mb-4">
+            <h3 className="text-gray-500 text-sm mb-1">Fecha de recontacto</h3>
+            <p>{formatearFecha(fechaRecontacto, true) || vacio()}</p>
           </div>
           <div className="border-b-2 border-gray-200 my-4"></div>
         </div>
