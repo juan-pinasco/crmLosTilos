@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
 import { useNavigate } from "react-router";
+import { Plus } from 'lucide-react';
 import { fetchClientes } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
 import { ClientesTable } from "../components/ClientesTable";
@@ -109,12 +110,13 @@ export const Home = () => {
       <Header />
       <div className="w-full px-4 md:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Clientes</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Tabla de Clientes</h1>
           <button
             onClick={() => navigate("/create-client")}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             Nuevo Cliente
+            <Plus size={18} className="ml-2 inline-block" />
           </button>
         </div>
         

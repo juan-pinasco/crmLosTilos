@@ -12,7 +12,7 @@ export const ESTADO_CLIENTE_DEFAULT = "Activo";
 // Mapeo de estados a clases de colores para Tailwind CSS
 export const ESTADO_CLIENTE_COLORS: Record<string, string> = {
   "Activo": "bg-green-100 text-green-800",
-  "Inactivo": "bg-gray-100 text-gray-800",
+  "Inactivo": "bg-red-100 text-red-800",
   "Pendiente": "bg-yellow-100 text-yellow-800",
   "Archivado": "bg-red-100 text-red-800",
   "Baja": "bg-red-100 text-red-800"

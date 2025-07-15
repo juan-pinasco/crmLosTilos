@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
-import { Trash, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { Trash, ArrowUpDown, ArrowUp, ArrowDown, Search, X } from "lucide-react";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
 import { formatearFecha } from "../utils/dateUtils";
@@ -26,12 +25,11 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedColumns, setSelectedColumns] = useState<{[key: string]: boolean}>({});
   const [showColumnSelector, setShowColumnSelector] = useState<boolean>(false);
-  const navigate = useNavigate();
 
   // Definir las columnas disponibles para la tabla de clientes
   const availableColumns = [
     { key: 'ultima_interaccion', label: 'Última Interacción' },
-    { key: 'fecha_recontacto', label: 'Fecha Recontacto' },
+    { key: 'fecha_recontacto', label: 'Recontacto' },
     { key: 'nombre', label: 'Nombre' },
     { key: 'descripcion', label: 'Descripción' },
     { key: 'email', label: 'Email' },
@@ -46,20 +44,27 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
     { key: 'empleo', label: 'Empleo' }
   ];
 
+  // Definir las columnas seleccionadas por defecto
+  const defaultSelectedColumns = {
+    'ultima_interaccion': true,
+    'fecha_recontacto': true,
+    'nombre': true,
+    'descripcion': true,
+    'telefono': true,
+    'estado': true,
+    'temperatura': true,
+    'vendedor_id': true
+  };
+
   // Inicializar las columnas seleccionadas por defecto
   useEffect(() => {
-    const initialSelectedColumns = {
-      'ultima_interaccion': true,
-      'fecha_recontacto': true,
-      'nombre': true,
-      'descripcion': true,
-      'telefono': true,
-      'estado': true,
-      'temperatura': true,
-      'vendedor_id': true
-    };
-    setSelectedColumns(initialSelectedColumns);
+    setSelectedColumns({...defaultSelectedColumns});
   }, []);
+
+  // Función para reiniciar las columnas a su estado inicial
+  const resetColumns = () => {
+    setSelectedColumns({...defaultSelectedColumns});
+  };
 
   // Función para obtener el nombre del vendedor por su ID.
   const getNombreVendedor = (vendedorAsignadoId: string) => {
@@ -204,15 +209,23 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
         <div className="relative">
           <button 
             onClick={() => setShowColumnSelector(!showColumnSelector)}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+            className="cursor-pointer px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
           >
             Seleccionar columnas
           </button>
           
           {showColumnSelector && (
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10 p-4 border border-gray-200">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Columnas visibles:</h3>
-              <div className="max-h-60 overflow-y-auto">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-sm font-medium text-gray-700">Columnas visibles:</h3>
+                <button 
+                  onClick={() => setShowColumnSelector(false)}
+                  className="cursor-pointer text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="max-h-60 overflow-y-auto mb-3">
                 {availableColumns.map((column) => (
                   <div key={column.key} className="flex items-center mb-2">
                     <input
@@ -227,6 +240,14 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
                     </label>
                   </div>
                 ))}
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={resetColumns}
+                  className="cursor-pointer text-sm px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                >
+                  Reiniciar
+                </button>
               </div>
             </div>
           )}
@@ -256,9 +277,6 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
                     </th>
                   )
                 ))}
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Acciones
-                </th>
               </tr>
             </thead>
 
@@ -268,16 +286,20 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
                   <tr 
                     key={cliente.id || index}
                     className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/profile-client/${cliente.id}`)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      // Usar window.location.href para forzar una navegación completa
+                      window.location.href = `/profile-client/${cliente.id}`;
+                    }}
                   >
                     {selectedColumns['ultima_interaccion'] && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatearFecha(cliente.ultima_interaccion, true)}
+                        {formatearFecha(cliente.ultima_interaccion)}
                       </td>
                     )}
                     {selectedColumns['fecha_recontacto'] && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {cliente.fecha_recontacto ? formatearFecha(cliente.fecha_recontacto, true) : '-'}
+                        {cliente.fecha_recontacto ? formatearFecha(cliente.fecha_recontacto) : '-'}
                       </td>
                     )}
                     {selectedColumns['nombre'] && (
