@@ -66,6 +66,16 @@ export const ProfileClient = () => {
     console.log(`Fecha de recontacto actualizada en ProfileClient: ${nuevaFecha}`);
   };
 
+  // Función para manejar la actualización del cliente desde InformacionCliente
+  const handleClienteActualizado = (clienteActualizado: Cliente) => {
+    console.log('Cliente actualizado en ProfileClient:', clienteActualizado);
+    setCliente(clienteActualizado);
+    // Actualizar también la fecha de recontacto si ha cambiado
+    if (clienteActualizado.fecha_recontacto !== fechaRecontacto) {
+      setFechaRecontacto(clienteActualizado.fecha_recontacto);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -104,7 +114,8 @@ export const ProfileClient = () => {
               ...cliente,
               fecha_recontacto: fechaRecontacto // Usamos el estado compartido
             }} 
-            vendedores={vendedores} 
+            vendedores={vendedores}
+            onClienteActualizado={handleClienteActualizado}
           />
         </div>
 

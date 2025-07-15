@@ -154,3 +154,27 @@ export const updateFechaRecontacto = async (id: string, fecha: string | null) =>
     return null;
   }
 };
+
+// Actualizar datos del cliente
+export const updateCliente = async (id: string, clienteData: Partial<Cliente>) => {
+  try {
+    console.log(`Actualizando datos del cliente ${id}:`, clienteData);
+    
+    const { data, error } = await supabase
+      .from("clientes")
+      .update(clienteData)
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("Error al actualizar el cliente:", error);
+      throw error;
+    }
+
+    console.log("Cliente actualizado correctamente:", data);
+    return data[0];
+  } catch (error) {
+    console.error("Error al actualizar el cliente:", error);
+    return null;
+  }
+};

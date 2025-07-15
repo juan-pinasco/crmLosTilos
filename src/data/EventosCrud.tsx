@@ -80,6 +80,29 @@ export const crearEvento = async (eventoData: {
     }
     
     console.log("Evento creado exitosamente");
+    
+    // Si se creó el evento correctamente, hacer una consulta adicional para obtener el evento con la información del vendedor
+    if (data && data.length > 0) {
+      const eventoId = data[0].id;
+      const { data: eventoConVendedor, error: errorConsulta } = await supabase
+        .from("eventos")
+        .select(`
+          *,
+          vendedor:tarea_vendedor_id(id, nombre)
+        `)
+        .eq("id", eventoId)
+        .single();
+      
+      if (errorConsulta) {
+        console.error("Error al obtener evento con vendedor:", errorConsulta);
+        // Si hay error en la consulta adicional, devolvemos el evento original sin vendedor
+        return data[0] as Evento;
+      }
+      
+      console.log("Evento recuperado con información de vendedor");
+      return eventoConVendedor as Evento;
+    }
+    
     return data?.[0] as Evento;
   } catch (err: any) {
     console.error("Error al crear evento:", err);
