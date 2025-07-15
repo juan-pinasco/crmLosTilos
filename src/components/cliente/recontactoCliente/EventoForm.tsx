@@ -8,7 +8,7 @@ interface EventoFormProps {
     descripcion: string;
     fecha_realizacion: string;
     estado_tarea: string;
-    tarea_vendedor_id: string;
+    tarea_vendedor_id: string | null;
   };
   vendedores: Vendedor[];
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
@@ -56,10 +56,10 @@ export const EventoForm = ({
       
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fecha_realizacion">
-          Fecha *
+          Fecha y Hora *
         </label>
         <input
-          type="date"
+          type="datetime-local"
           id="fecha_realizacion"
           name="fecha_realizacion"
           value={nuevoEvento.fecha_realizacion}
@@ -68,18 +68,17 @@ export const EventoForm = ({
           required
         />
       </div>
-      
+
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="tarea_vendedor_id">
-          Vendedor Asignado *
+          Vendedor Asignado
         </label>
         <select
           id="tarea_vendedor_id"
           name="tarea_vendedor_id"
-          value={nuevoEvento.tarea_vendedor_id}
+          value={nuevoEvento.tarea_vendedor_id || ""}
           onChange={onInputChange}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          required
         >
           <option value="">Seleccionar vendedor</option>
           {vendedores.map(vendedor => (

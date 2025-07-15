@@ -4,8 +4,9 @@ import { Auth } from "../pages/Auth";
 import { Home } from "../pages/Home";
 import { ProfileClient } from "../pages/ProfileClient";
 import { CreateClient } from "../pages/CreateClient";
-import { Eventos } from "../pages/Eventos";
-import { CreateEvento } from "../pages/CreateEvento";
+import { Eventos } from "../pages/eventos/Eventos";
+import { CreateEvento } from "../pages/eventos/CreateEvento";
+import { CalendarioEventos } from "../pages/eventos/CalendarioEventos";
 
 export const AppRouters = () => {
     return(
@@ -20,6 +21,7 @@ export const AppRouters = () => {
                 <Route path="/profile-client/:id" element={<ProfileClient />} />
                 <Route path="/eventos" element={<Eventos />} />
                 <Route path="/create-evento" element={<CreateEvento />} />
+                <Route path="/calendario-eventos" element={<CalendarioEventos />} />
                 {/* Aquí puedes añadir más rutas protegidas */}
             </Route>
             

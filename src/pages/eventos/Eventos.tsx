@@ -1,14 +1,14 @@
-import { Header } from "../components/Header";
+import { Header } from "../../components/Header";
 import { useState, useEffect } from "react";
-import type { Evento } from "../types/EventsType";
-import type { Vendedor } from "../types/SellersType";
-import type { Cliente } from "../types/ClientsType";
+import type { Evento } from "../../types/EventsType";
+import type { Vendedor } from "../../types/SellersType";
+import type { Cliente } from "../../types/ClientsType";
 import { useNavigate } from "react-router";
 import { Trash } from "lucide-react";
-import { fetchEventos, eliminarEvento } from "../data/EventosCrud";
-import { fetchVendedores } from "../data/VendedoresCrud";
-import { fetchClientes } from "../data/ClientsCrud";
-import { formatearFecha } from "../utils/dateUtils";
+import { fetchEventos, eliminarEvento } from "../../data/EventosCrud";
+import { fetchVendedores } from "../../data/VendedoresCrud";
+import { fetchClientes } from "../../data/ClientsCrud";
+import { formatearFecha } from "../../utils/dateUtils";
 
 export const Eventos = () => {
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -106,12 +106,20 @@ export const Eventos = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Eventos</h1>
-          <button
-            onClick={() => navigate("/create-evento")}
-            className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-          >
-            Crear Evento
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => navigate("/calendario-eventos")}
+              className="cursor-pointer bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded"
+            >
+              Ver Calendario
+            </button>
+            <button
+              onClick={() => navigate("/create-evento")}
+              className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+            >
+              Crear Evento
+            </button>
+          </div>
         </div>
 
         {loading ? (

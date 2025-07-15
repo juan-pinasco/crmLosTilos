@@ -21,7 +21,9 @@ export const fetchClientes = async () => {
         temperatura,
         vendedor_id,
         ultima_interaccion,
-        created_by
+        created_by,
+        empleo,
+        fecha_recontacto
       `)
       .order("created_at", { ascending: true });
 
@@ -85,7 +87,9 @@ export const fetchClienteById = async (id: string) => {
         temperatura,
         vendedor_id,
         ultima_interaccion,
-        created_by
+        created_by,
+        empleo,
+        fecha_recontacto
       `)
       .eq("id", id)
       .single();
@@ -123,6 +127,30 @@ export const updateUltimaInteraccion = async (id: string, fecha: string) => {
     return data;
   } catch (error) {
     console.error("Error al actualizar la última interacción del cliente:", error);
+    return null;
+  }
+};
+
+// Actualizar la fecha de recontacto del cliente
+export const updateFechaRecontacto = async (id: string, fecha: string | null) => {
+  try {
+    console.log(`Actualizando fecha de recontacto del cliente ${id} a ${fecha === null ? 'NULL' : fecha}`);
+    
+    const { data, error } = await supabase
+      .from("clientes")
+      .update({ fecha_recontacto: fecha })
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("Error al actualizar la fecha de recontacto:", error);
+      throw error;
+    }
+
+    console.log("Fecha de recontacto actualizada correctamente:", data);
+    return data;
+  } catch (error) {
+    console.error("Error al actualizar la fecha de recontacto del cliente:", error);
     return null;
   }
 };

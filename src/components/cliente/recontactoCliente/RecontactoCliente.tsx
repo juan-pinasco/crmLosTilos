@@ -8,12 +8,14 @@ import { fetchEventosByCliente, crearEvento, actualizarEstadoEvento, eliminarEve
 import { EventosList } from "./EventosList";
 import { EventoModal } from "./EventoModal";
 import { ESTADO_TAREA_DEFAULT } from "../../../constants/estadosTareas";
+import { updateFechaRecontacto } from "../../../data/ClientsCrud";
 
 interface RecontactoClienteProps {
   clienteId: string;
+  onFechaRecontactoChange?: (nuevaFecha: string | null) => void;
 }
 
-export const RecontactoCliente = ({ clienteId }: RecontactoClienteProps) => {
+export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: RecontactoClienteProps) => {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -22,7 +24,7 @@ export const RecontactoCliente = ({ clienteId }: RecontactoClienteProps) => {
   const [nuevoEvento, setNuevoEvento] = useState({
     titulo: "",
     descripcion: "",
-    fecha_realizacion: new Date().toISOString().split("T")[0],
+    fecha_realizacion: new Date().toISOString().slice(0, 16),
     estado_tarea: ESTADO_TAREA_DEFAULT,
     tarea_vendedor_id: ""
   });
@@ -64,10 +66,53 @@ export const RecontactoCliente = ({ clienteId }: RecontactoClienteProps) => {
       const data = await fetchEventosByCliente(clienteId);
       if (data) {
         setEventos(data);
+        actualizarFechaRecontacto(data);
       }
     } catch (err) {
       console.error("Error al cargar eventos:", err);
       setError("Error al cargar los eventos");
+    }
+  };
+
+  // Función para obtener la fecha más lejana de los eventos
+  const obtenerFechaMasLejana = (eventos: Evento[]): string | null => {
+    if (!eventos || eventos.length === 0) return null;
+    
+    // Ordenar eventos por fecha de realización (descendente)
+    const eventosOrdenados = [...eventos].sort((a, b) => {
+      const fechaA = new Date(a.fecha_realizacion).getTime();
+      const fechaB = new Date(b.fecha_realizacion).getTime();
+      return fechaB - fechaA; // Orden descendente para obtener la más lejana primero
+    });
+    
+    // Retornar la fecha más lejana (la primera después de ordenar)
+    return eventosOrdenados[0]?.fecha_realizacion || null;
+  };
+
+  // Función para actualizar la fecha de recontacto
+  const actualizarFechaRecontacto = async (eventosActualizados: Evento[]) => {
+    const fechaMasLejana = obtenerFechaMasLejana(eventosActualizados);
+    
+    if (fechaMasLejana) {
+      // Actualizar en la base de datos
+      await updateFechaRecontacto(clienteId, fechaMasLejana);
+      
+      // Notificar al componente padre si existe la función
+      if (onFechaRecontactoChange) {
+        onFechaRecontactoChange(fechaMasLejana);
+      }
+      
+      console.log(`Fecha de recontacto actualizada para cliente ${clienteId}: ${fechaMasLejana}`);
+    } else {
+      // Si no hay eventos, la fecha de recontacto debe ser null
+      await updateFechaRecontacto(clienteId, null);
+      
+      // Notificar al componente padre si existe la función
+      if (onFechaRecontactoChange) {
+        onFechaRecontactoChange(null);
+      }
+      
+      console.log(`No hay eventos para el cliente ${clienteId}, fecha de recontacto establecida a null`);
     }
   };
 
@@ -95,24 +140,26 @@ export const RecontactoCliente = ({ clienteId }: RecontactoClienteProps) => {
         fecha_realizacion: new Date(nuevoEvento.fecha_realizacion).toISOString(),
         estado_tarea: nuevoEvento.estado_tarea || ESTADO_TAREA_DEFAULT,
         tarea_client_id: clienteId,
-        tarea_vendedor_id: nuevoEvento.tarea_vendedor_id,
+        tarea_vendedor_id: nuevoEvento.tarea_vendedor_id === "" ? null : nuevoEvento.tarea_vendedor_id,
         created_by: userEmail || "usuario@sistema.com"
       };
       
-      await crearEvento(eventoData);
+      const nuevoEventoCreado = await crearEvento(eventoData);
       
       // Limpiar formulario y cerrar modal
       setNuevoEvento({
         titulo: "",
         descripcion: "",
-        fecha_realizacion: new Date().toISOString().split("T")[0],
+        fecha_realizacion: new Date().toISOString().slice(0, 16),
         estado_tarea: ESTADO_TAREA_DEFAULT,
         tarea_vendedor_id: ""
       });
       setMostrarModal(false);
       
-      // Recargar eventos
-      await cargarEventos();
+      // Actualizar la lista de eventos y la fecha de recontacto
+      const eventosActualizados = nuevoEventoCreado ? [...eventos, nuevoEventoCreado] : eventos;
+      setEventos(eventosActualizados);
+      actualizarFechaRecontacto(eventosActualizados);
     } catch (err: any) {
       console.error("Error al crear evento:", err);
       setError(`Error al crear el evento: ${err.message || err}`);
@@ -126,7 +173,11 @@ export const RecontactoCliente = ({ clienteId }: RecontactoClienteProps) => {
       await eliminarEvento(eventoId);
       
       // Actualizar lista de eventos
-      setEventos(prev => prev.filter(evento => evento.id !== eventoId));
+      const eventosActualizados = eventos.filter(evento => evento.id !== eventoId);
+      setEventos(eventosActualizados);
+      
+      // Actualizar fecha de recontacto
+      actualizarFechaRecontacto(eventosActualizados);
     } catch (err) {
       console.error("Error al eliminar evento:", err);
       setError("Error al eliminar el evento");
@@ -157,7 +208,9 @@ export const RecontactoCliente = ({ clienteId }: RecontactoClienteProps) => {
     return fecha.toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 

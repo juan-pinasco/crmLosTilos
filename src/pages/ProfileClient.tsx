@@ -18,6 +18,8 @@ export const ProfileClient = () => {
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [observaciones, setObservaciones] = useState<Observacion[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  // Estado para la fecha de recontacto que se compartirá entre componentes
+  const [fechaRecontacto, setFechaRecontacto] = useState<string | null>(null);
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -34,6 +36,8 @@ export const ProfileClient = () => {
         const data = await fetchClienteById(id);
         if (data) {
           setCliente(data);
+          // Inicializar la fecha de recontacto con la del cliente
+          setFechaRecontacto(data.fecha_recontacto);
         }
 
         // Cargar observaciones del cliente
@@ -46,6 +50,21 @@ export const ProfileClient = () => {
 
     cargarDatos();
   }, [id]);
+
+  // Función para actualizar la fecha de recontacto desde RecontactoCliente
+  const handleFechaRecontactoChange = (nuevaFecha: string | null) => {
+    setFechaRecontacto(nuevaFecha);
+    
+    // También actualizamos el cliente local para mantener todo sincronizado
+    if (cliente) {
+      setCliente({
+        ...cliente,
+        fecha_recontacto: nuevaFecha
+      });
+    }
+    
+    console.log(`Fecha de recontacto actualizada en ProfileClient: ${nuevaFecha}`);
+  };
 
   if (loading) {
     return (
@@ -81,14 +100,20 @@ export const ProfileClient = () => {
         {/* Columna central - Información del cliente */}
         <div className="col-span-12 md:col-span-6">
           <InformacionCliente 
-            cliente={cliente} 
+            cliente={{
+              ...cliente,
+              fecha_recontacto: fechaRecontacto // Usamos el estado compartido
+            }} 
             vendedores={vendedores} 
           />
         </div>
 
         {/* Columna derecha - Próximos recontactos */}
         <div className="col-span-12 md:col-span-3">
-          <RecontactoCliente clienteId={id || ''} />
+          <RecontactoCliente 
+            clienteId={id || ''} 
+            onFechaRecontactoChange={handleFechaRecontactoChange}
+          />
         </div>
       </div>
     </div>

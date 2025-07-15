@@ -14,4 +14,6 @@ export interface Cliente {
     vendedor_id: string;
     ultima_interaccion: string;
     created_by: string;
+    empleo: string;
+    fecha_recontacto: string | null;
 }
