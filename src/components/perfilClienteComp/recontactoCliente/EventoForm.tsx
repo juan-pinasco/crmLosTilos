@@ -71,7 +71,7 @@ export const EventoForm = ({
 
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="tarea_vendedor_id">
-          Vendedor Asignado
+          Ejecutor de tarea
         </label>
         <select
           id="tarea_vendedor_id"
@@ -80,7 +80,7 @@ export const EventoForm = ({
           onChange={onInputChange}
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
-          <option value="">Seleccionar vendedor</option>
+          <option value="">Seleccionar ejecutor</option>
           {vendedores.map(vendedor => (
             <option key={vendedor.id} value={vendedor.id}>
               {vendedor.nombre}

@@ -8,9 +8,9 @@ import type { Vendedor } from "../types/SellersType";
 import type { Observacion } from "../types/ObservationsType";
 import { Header } from "../components/Header";
 // Importar los nuevos componentes
-import { ObservacionesCliente } from "../components/cliente/ObservacionesCliente";
-import { InformacionCliente } from "../components/cliente/InformacionCliente";
-import { RecontactoCliente } from "../components/cliente/recontactoCliente/RecontactoCliente";
+import { ObservacionesCliente } from "../components/perfilClienteComp/ObservacionesCliente";
+import { InformacionCliente } from "../components/perfilClienteComp/InformacionCliente";
+import { RecontactoCliente } from "../components/perfilClienteComp/recontactoCliente/RecontactoCliente";
 
 export const ProfileClient = () => {
   const { id } = useParams<{ id: string }>();

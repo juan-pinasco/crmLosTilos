@@ -1,12 +1,13 @@
 import { Routes, Route, Navigate } from "react-router";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { Auth } from "../pages/Auth";
-import { Home } from "../pages/Home";
+import { Home } from "../pages/HomeClients";
 import { ProfileClient } from "../pages/ProfileClient";
 import { CreateClient } from "../pages/CreateClient";
 import { Eventos } from "../pages/eventos/Eventos";
 import { CreateEvento } from "../pages/eventos/CreateEvento";
 import { CalendarioEventos } from "../pages/eventos/CalendarioEventos";
+import { DetalleEvento } from "../pages/eventos/DetalleEvento";
 
 export const AppRouters = () => {
     return(
@@ -22,6 +23,7 @@ export const AppRouters = () => {
                 <Route path="/eventos" element={<Eventos />} />
                 <Route path="/create-evento" element={<CreateEvento />} />
                 <Route path="/calendario-eventos" element={<CalendarioEventos />} />
+                <Route path="/detalle-evento/:id" element={<DetalleEvento />} />
                 {/* Aquí puedes añadir más rutas protegidas */}
             </Route>
             

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase';
 import { GetSession } from '../data/AuthsCrud';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 
 export const Header = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -32,7 +32,32 @@ export const Header = () => {
 
   const handleSignOut = async () => {
     try {
+      // Obtener todas las claves del localStorage
+      const keys = Object.keys(window.localStorage);
+      
+      // Limpiar todos los filtros y configuraciones guardadas
+      keys.forEach(key => {
+        // Eliminar específicamente los filtros mencionados
+        if (
+          key.includes('clientesHome_filtros') || 
+          key.includes('clientesTable_') || 
+          key.includes('filter') || 
+          key.includes('sort') || 
+          key.includes('page') ||
+          key.includes('cliente') || 
+          key.includes('search') || 
+          key.includes('columns') || 
+          key.includes('vendedor')
+        ) {
+          window.localStorage.removeItem(key);
+          console.log(`Eliminado: ${key}`);
+        }
+      });
+      
+      // Cerrar sesión en Supabase
       await supabase.auth.signOut();
+      
+      console.log('Se ha cerrado sesión y se han limpiado los filtros del localStorage');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }
@@ -55,12 +80,28 @@ export const Header = () => {
           {/* Pestañas de navegación en el medio */}
           {userEmail && (
             <nav className="flex space-x-6">
-              <Link to="/" className={`py-2 px-3 font-medium ${isActive('/')}`}>
+              <a 
+                href="/" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.href = '/';
+                }}
+                className={`py-2 px-3 font-medium ${isActive('/')}`}
+              >
                 Clientes
-              </Link>
-              <Link to="/eventos" className={`py-2 px-3 font-medium ${isActive('/eventos')}`}>
+              </a>
+              <a 
+                href="/eventos" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.href = '/eventos';
+                }}
+                className={`py-2 px-3 font-medium ${isActive('/eventos')}`}
+              >
                 Eventos
-              </Link>
+              </a>
             </nav>
           )}
           

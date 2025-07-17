@@ -317,10 +317,10 @@ export const CreateEvento = () => {
                   />
                 </div>
 
-                {/* Vendedor */}
+                {/* Ejecutor */}
                 <div>
                   <label htmlFor="tarea_vendedor_id" className="block text-sm font-medium text-gray-700 mb-1">
-                    Vendedor
+                    Ejecutor
                   </label>
                   <select
                     id="tarea_vendedor_id"
@@ -329,7 +329,7 @@ export const CreateEvento = () => {
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    <option value="">Sin vendedor</option>
+                    <option value="">Sin ejecutor</option>
                     <option disabled>──────────────</option>
                     {vendedores.map((vendedor) => (
                       <option key={vendedor.id} value={vendedor.id}>

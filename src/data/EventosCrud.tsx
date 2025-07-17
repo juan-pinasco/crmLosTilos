@@ -149,3 +149,60 @@ export const eliminarEvento = async (eventoId: string) => {
     return false;
   }
 };
+
+// Actualizar evento
+export const actualizarEvento = async (eventoId: string, eventoData: {
+  titulo?: string;
+  descripcion?: string;
+  fecha_realizacion?: string;
+  estado_tarea?: string;
+  tarea_client_id?: string | null;
+  tarea_vendedor_id?: string | null;
+}) => {
+  try {
+    const { data, error } = await supabase
+      .from("eventos")
+      .update(eventoData)
+      .eq("id", eventoId)
+      .select(`
+        *,
+        vendedor:tarea_vendedor_id(id, nombre),
+        cliente:tarea_client_id(id, nombre)
+      `);
+    
+    if (error) {
+      console.error("Error al actualizar evento:", error);
+      throw error;
+    }
+    
+    return data?.[0] as Evento;
+  } catch (err) {
+    console.error("Error al actualizar evento:", err);
+    return null;
+  }
+};
+
+// Obtener evento por ID
+export const fetchEventoPorId = async (eventoId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from("eventos")
+      .select(`
+        *,
+        vendedor:tarea_vendedor_id(id, nombre),
+        cliente:tarea_client_id(id, nombre)
+      `)
+      .eq("id", eventoId)
+      .single();
+    
+    if (error) {
+      console.error("Error al obtener evento:", error);
+      throw error;
+    }
+    
+    return data as Evento;
+  } catch (err) {
+    console.error("Error al cargar evento:", err);
+    return null;
+  }
+};

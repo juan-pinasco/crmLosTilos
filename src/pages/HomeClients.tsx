@@ -6,19 +6,29 @@ import { useNavigate } from "react-router";
 import { Plus } from 'lucide-react';
 import { fetchClientes } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
-import { ClientesTable } from "../components/ClientesTable";
-import { FiltrosCliente } from "../components/FiltrosCliente";
-import type { FiltrosSeleccionados } from "../components/FiltrosCliente";
+import { ClientesTable } from "../components/homeClientes/ClientesTable";
+import { FiltrosCliente } from "../components/homeClientes/FiltrosCliente";
+import type { FiltrosSeleccionados } from "../components/homeClientes/FiltrosCliente";
+
+// Constante para la clave de localStorage
+const FILTROS_STORAGE_KEY = 'clientesHome_filtros';
 
 export const Home = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filtros, setFiltros] = useState<FiltrosSeleccionados>({
-    tiposCliente: [],
-    estadosCliente: [],
-    temperaturasCliente: []
+  
+  // Inicializar filtros desde localStorage o usar valores predeterminados
+  const [filtros, setFiltros] = useState<FiltrosSeleccionados>(() => {
+    const savedFiltros = localStorage.getItem(FILTROS_STORAGE_KEY);
+    return savedFiltros 
+      ? JSON.parse(savedFiltros) 
+      : {
+          tiposCliente: [],
+          estadosCliente: [],
+          temperaturasCliente: []
+        };
   });
   const navigate = useNavigate();
 
@@ -38,7 +48,8 @@ export const Home = () => {
         const clientesData = await fetchClientes();
         if (clientesData) {
           setClientes(clientesData);
-          setClientesFiltrados(clientesData);
+          // Aplicar filtros guardados a los clientes cargados
+          aplicarFiltros(clientesData, filtros);
         }
       } catch (error) {
         console.error("Error al cargar datos:", error);
@@ -57,6 +68,7 @@ export const Home = () => {
       const nuevosClientes = await fetchClientes();
       if (nuevosClientes) {
         setClientes(nuevosClientes);
+        // Aplicar los filtros actuales (que ya están en localStorage)
         aplicarFiltros(nuevosClientes, filtros);
       }
     } catch (error) {
@@ -69,6 +81,8 @@ export const Home = () => {
   // Función para manejar cambios en los filtros y aplicarlos a la lista de clientes
   const handleFiltrosChange = (nuevosFiltros: FiltrosSeleccionados) => {
     setFiltros(nuevosFiltros);
+    // Guardar filtros en localStorage
+    localStorage.setItem(FILTROS_STORAGE_KEY, JSON.stringify(nuevosFiltros));
     aplicarFiltros(clientes, nuevosFiltros);
   };
 
@@ -113,10 +127,10 @@ export const Home = () => {
           <h1 className="text-2xl font-semibold text-gray-900">Tabla de Clientes</h1>
           <button
             onClick={() => navigate("/create-client")}
-            className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="cursor-pointer px-2 py-2 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
           >
+            <Plus size={20} className="mr-2 inline-block" />
             Nuevo Cliente
-            <Plus size={18} className="ml-2 inline-block" />
           </button>
         </div>
         
@@ -124,7 +138,10 @@ export const Home = () => {
         <div className="flex flex-col md:flex-row gap-6">
           {/* Columna izquierda para los filtros */}
           <div className="md:w-1/6">
-            <FiltrosCliente onFiltrosChange={handleFiltrosChange} />
+            <FiltrosCliente 
+              onFiltrosChange={handleFiltrosChange} 
+              initialFiltros={filtros} 
+            />
           </div>
           
           {/* Columna derecha para la tabla */}
