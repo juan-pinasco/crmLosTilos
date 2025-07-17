@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { clearOnLogout } from '../utils/storageManager';
 import { supabase } from '../integrations/supabase';
 import { GetSession } from '../data/AuthsCrud';
 import { useLocation } from 'react-router';
@@ -32,27 +33,8 @@ export const Header = () => {
 
   const handleSignOut = async () => {
     try {
-      // Obtener todas las claves del localStorage
-      const keys = Object.keys(window.localStorage);
-      
-      // Limpiar todos los filtros y configuraciones guardadas
-      keys.forEach(key => {
-        // Eliminar específicamente los filtros mencionados
-        if (
-          key.includes('clientesHome_filtros') || 
-          key.includes('clientesTable_') || 
-          key.includes('filter') || 
-          key.includes('sort') || 
-          key.includes('page') ||
-          key.includes('cliente') || 
-          key.includes('search') || 
-          key.includes('columns') || 
-          key.includes('vendedor')
-        ) {
-          window.localStorage.removeItem(key);
-          console.log(`Eliminado: ${key}`);
-        }
-      });
+            // Limpiar localStorage de forma centralizada y notificar a la aplicación
+      await clearOnLogout();
       
       // Cerrar sesión en Supabase
       await supabase.auth.signOut();
