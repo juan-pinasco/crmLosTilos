@@ -9,6 +9,7 @@ import { fetchEventos, eliminarEvento } from "../../data/EventosCrud";
 import { fetchVendedores } from "../../data/VendedoresCrud";
 import { fetchClientes } from "../../data/ClientsCrud";
 import { formatearFecha } from "../../utils/dateUtils";
+import { getEstadoClass } from "../../constants/estadosTareas";
 
 export const Eventos = () => {
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -86,19 +87,7 @@ export const Eventos = () => {
     setLoading(false);
   };
 
-  // Función para obtener la clase de color según el estado de la tarea
-  const getEstadoClass = (estado: string) => {
-    switch (estado?.toLowerCase()) {
-      case "completado":
-        return "bg-green-100 text-green-800";
-      case "en progreso":
-        return "bg-yellow-100 text-yellow-800";
-      case "cancelado":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // La función getEstadoClass ahora se importa desde constants/estadosTareas.ts
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -135,7 +124,7 @@ export const Eventos = () => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Fecha de Realización
+                    Fecha a Realizar
                   </th>
                   <th
                     scope="col"
@@ -153,7 +142,7 @@ export const Eventos = () => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    Vendedor
+                    Ejecutor
                   </th>
                   <th
                     scope="col"
@@ -182,6 +171,7 @@ export const Eventos = () => {
                     <tr 
                       key={evento.id || index}
                       className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => navigate(`/detalle-evento/${evento.id}`)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatearFecha(evento.fecha_realizacion, true)}

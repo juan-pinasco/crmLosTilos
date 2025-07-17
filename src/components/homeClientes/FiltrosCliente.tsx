@@ -1,10 +1,16 @@
-import { useState, useEffect } from "react";
-import { TIPOS_CLIENTE } from "../constants/tiposCliente";
-import { ESTADOS_CLIENTE } from "../constants/estadosCliente";
-import { TEMPERATURAS_CLIENTE } from "../constants/temperaturasCliente";
+import { useEffect, useCallback } from "react";
+import { TIPOS_CLIENTE } from "../../constants/tiposCliente";
+import { ESTADOS_CLIENTE } from "../../constants/estadosCliente";
+import { TEMPERATURAS_CLIENTE } from "../../constants/temperaturasCliente";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
+
+// Constante para la clave de localStorage
+const FILTROS_STORAGE_KEY = 'clientesHome_filtros';
 
 interface FiltrosClienteProps {
   onFiltrosChange: (filtros: FiltrosSeleccionados) => void;
+  // Opcional: Filtros iniciales que pueden venir del componente padre
+  initialFiltros?: FiltrosSeleccionados;
 }
 
 export interface FiltrosSeleccionados {
@@ -13,15 +19,24 @@ export interface FiltrosSeleccionados {
   temperaturasCliente: string[];
 }
 
-export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
-  const [filtros, setFiltros] = useState<FiltrosSeleccionados>({
-    tiposCliente: [],
-    estadosCliente: [],
-    temperaturasCliente: []
-  });
+export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClienteProps) => {
+  // Usar el hook useLocalStorage para manejar los filtros persistentes
+  const [filtros, setFiltros] = useLocalStorage<FiltrosSeleccionados>(
+    FILTROS_STORAGE_KEY,
+    initialFiltros || {
+      tiposCliente: [],
+      estadosCliente: [],
+      temperaturasCliente: []
+    }
+  );
 
   // Manejar cambios en los checkboxes de tipo de cliente
-  const handleTipoClienteChange = (tipo: string) => {
+  const handleTipoClienteChange = useCallback((tipo: string, event?: React.MouseEvent) => {
+    // Detener la propagación del evento para evitar interferencias con la navegación
+    if (event) {
+      event.stopPropagation();
+    }
+    
     setFiltros(prevFiltros => {
       const nuevosTipos = prevFiltros.tiposCliente.includes(tipo)
         ? prevFiltros.tiposCliente.filter(t => t !== tipo)
@@ -32,10 +47,15 @@ export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
         tiposCliente: nuevosTipos
       };
     });
-  };
+  }, [setFiltros]);
 
   // Manejar cambios en los checkboxes de estado de cliente
-  const handleEstadoClienteChange = (estado: string) => {
+  const handleEstadoClienteChange = useCallback((estado: string, event?: React.MouseEvent) => {
+    // Detener la propagación del evento para evitar interferencias con la navegación
+    if (event) {
+      event.stopPropagation();
+    }
+    
     setFiltros(prevFiltros => {
       const nuevosEstados = prevFiltros.estadosCliente.includes(estado)
         ? prevFiltros.estadosCliente.filter(e => e !== estado)
@@ -46,10 +66,15 @@ export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
         estadosCliente: nuevosEstados
       };
     });
-  };
+  }, [setFiltros]);
 
   // Manejar cambios en los checkboxes de temperatura de cliente
-  const handleTemperaturaClienteChange = (temperatura: string) => {
+  const handleTemperaturaClienteChange = useCallback((temperatura: string, event?: React.MouseEvent) => {
+    // Detener la propagación del evento para evitar interferencias con la navegación
+    if (event) {
+      event.stopPropagation();
+    }
+    
     setFiltros(prevFiltros => {
       const nuevasTemperaturas = prevFiltros.temperaturasCliente.includes(temperatura)
         ? prevFiltros.temperaturasCliente.filter(t => t !== temperatura)
@@ -60,10 +85,11 @@ export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
         temperaturasCliente: nuevasTemperaturas
       };
     });
-  };
+  }, [setFiltros]);
 
   // Notificar al componente padre cuando cambian los filtros
   useEffect(() => {
+    // Notificar al componente padre
     onFiltrosChange(filtros);
   }, [filtros, onFiltrosChange]);
 
@@ -72,23 +98,7 @@ export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
       <h2 className="text-lg font-medium text-gray-800 mb-4">Filtros</h2>
       
       <div className="flex flex-col gap-6">
-        {/* Filtro por tipo de cliente */}
-        <div>
-          <h3 className="font-medium text-gray-700 mb-2">Tipo de Cliente</h3>
-          <div className="space-y-2">
-            {TIPOS_CLIENTE.map(tipo => (
-              <label key={`tipo-${tipo}`} className="flex items-center">
-                <input
-                  type="checkbox"
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                  checked={filtros.tiposCliente.includes(tipo)}
-                  onChange={() => handleTipoClienteChange(tipo)}
-                />
-                <span className="ml-2 text-gray-700">{tipo}</span>
-              </label>
-            ))}
-          </div>
-        </div>
+       
 
         {/* Filtro por estado de cliente */}
         <div>
@@ -100,7 +110,7 @@ export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
                   type="checkbox"
                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   checked={filtros.estadosCliente.includes(estado)}
-                  onChange={() => handleEstadoClienteChange(estado)}
+                  onChange={(e) => handleEstadoClienteChange(estado, e.nativeEvent as unknown as React.MouseEvent)}
                 />
                 <span className="ml-2 text-gray-700">{estado}</span>
               </label>
@@ -118,9 +128,26 @@ export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
                   type="checkbox"
                   className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   checked={filtros.temperaturasCliente.includes(temperatura)}
-                  onChange={() => handleTemperaturaClienteChange(temperatura)}
+                  onChange={(e) => handleTemperaturaClienteChange(temperatura, e.nativeEvent as unknown as React.MouseEvent)}
                 />
                 <span className="ml-2 text-gray-700">{temperatura}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+         {/* Filtro por tipo de cliente */}
+         <div>
+          <h3 className="font-medium text-gray-700 mb-2">Tipo de Cliente</h3>
+          <div className="space-y-2">
+            {TIPOS_CLIENTE.map(tipo => (
+              <label key={`tipo-${tipo}`} className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  checked={filtros.tiposCliente.includes(tipo)}
+                  onChange={(e) => handleTipoClienteChange(tipo, e.nativeEvent as unknown as React.MouseEvent)}
+                />
+                <span className="ml-2 text-gray-700">{tipo}</span>
               </label>
             ))}
           </div>
@@ -130,11 +157,14 @@ export const FiltrosCliente = ({ onFiltrosChange }: FiltrosClienteProps) => {
       {/* Botón para limpiar todos los filtros */}
       <div className="mt-6">
         <button
-          onClick={() => setFiltros({
-            tiposCliente: [],
-            estadosCliente: [],
-            temperaturasCliente: []
-          })}
+          onClick={(e) => {
+            e.stopPropagation(); // Evitar que el evento se propague
+            setFiltros({
+              tiposCliente: [],
+              estadosCliente: [],
+              temperaturasCliente: []
+            });
+          }}
           className="w-full px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
         >
           Limpiar filtros

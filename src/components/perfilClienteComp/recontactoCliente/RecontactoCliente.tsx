@@ -4,7 +4,12 @@ import { fetchVendedores } from "../../../data/VendedoresCrud";
 import type { Vendedor } from "../../../types/SellersType";
 import type { Evento } from "../../../types/EventsType";
 import { GetSession } from "../../../data/AuthsCrud";
-import { fetchEventosByCliente, crearEvento, actualizarEstadoEvento, eliminarEvento } from "../../../data/EventosCrud";
+import {
+  fetchEventosByCliente,
+  crearEvento,
+  actualizarEstadoEvento,
+  eliminarEvento,
+} from "../../../data/EventosCrud";
 import { EventosList } from "./EventosList";
 import { EventoModal } from "./EventoModal";
 import { ESTADO_TAREA_DEFAULT } from "../../../constants/estadosTareas";
@@ -15,7 +20,10 @@ interface RecontactoClienteProps {
   onFechaRecontactoChange?: (nuevaFecha: string | null) => void;
 }
 
-export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: RecontactoClienteProps) => {
+export const RecontactoCliente = ({
+  clienteId,
+  onFechaRecontactoChange,
+}: RecontactoClienteProps) => {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -26,7 +34,7 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
     descripcion: "",
     fecha_realizacion: new Date().toISOString().slice(0, 16),
     estado_tarea: ESTADO_TAREA_DEFAULT,
-    tarea_vendedor_id: ""
+    tarea_vendedor_id: "",
   });
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
@@ -35,16 +43,16 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
       try {
         setCargando(true);
         setError(null);
-        
+
         // Cargar eventos del cliente
         await cargarEventos();
-        
+
         // Cargar vendedores
         const vendedoresData = await fetchVendedores();
         if (vendedoresData) {
           setVendedores(vendedoresData);
         }
-        
+
         // Obtener email del usuario actual
         const session = await GetSession();
         if (session) {
@@ -57,7 +65,7 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
         setCargando(false);
       }
     };
-    
+
     cargarDatos();
   }, [clienteId]);
 
@@ -77,14 +85,14 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
   // Función para obtener la fecha más lejana de los eventos
   const obtenerFechaMasLejana = (eventos: Evento[]): string | null => {
     if (!eventos || eventos.length === 0) return null;
-    
+
     // Ordenar eventos por fecha de realización (descendente)
     const eventosOrdenados = [...eventos].sort((a, b) => {
       const fechaA = new Date(a.fecha_realizacion).getTime();
       const fechaB = new Date(b.fecha_realizacion).getTime();
       return fechaB - fechaA; // Orden descendente para obtener la más lejana primero
     });
-    
+
     // Retornar la fecha más lejana (la primera después de ordenar)
     return eventosOrdenados[0]?.fecha_realizacion || null;
   };
@@ -92,35 +100,43 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
   // Función para actualizar la fecha de recontacto
   const actualizarFechaRecontacto = async (eventosActualizados: Evento[]) => {
     const fechaMasLejana = obtenerFechaMasLejana(eventosActualizados);
-    
+
     if (fechaMasLejana) {
       // Actualizar en la base de datos
       await updateFechaRecontacto(clienteId, fechaMasLejana);
-      
+
       // Notificar al componente padre si existe la función
       if (onFechaRecontactoChange) {
         onFechaRecontactoChange(fechaMasLejana);
       }
-      
-      console.log(`Fecha de recontacto actualizada para cliente ${clienteId}: ${fechaMasLejana}`);
+
+      console.log(
+        `Fecha de recontacto actualizada para cliente ${clienteId}: ${fechaMasLejana}`
+      );
     } else {
       // Si no hay eventos, la fecha de recontacto debe ser null
       await updateFechaRecontacto(clienteId, null);
-      
+
       // Notificar al componente padre si existe la función
       if (onFechaRecontactoChange) {
         onFechaRecontactoChange(null);
       }
-      
-      console.log(`No hay eventos para el cliente ${clienteId}, fecha de recontacto establecida a null`);
+
+      console.log(
+        `No hay eventos para el cliente ${clienteId}, fecha de recontacto establecida a null`
+      );
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    setNuevoEvento(prev => ({
+    setNuevoEvento((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -129,35 +145,42 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
       setError("El título y la fecha son obligatorios");
       return;
     }
-    
+
     try {
       setError(null);
-      
+
       // Preparar datos del evento
       const eventoData = {
         titulo: nuevoEvento.titulo,
         descripcion: nuevoEvento.descripcion || "",
-        fecha_realizacion: new Date(nuevoEvento.fecha_realizacion).toISOString(),
+        fecha_realizacion: new Date(
+          nuevoEvento.fecha_realizacion
+        ).toISOString(),
         estado_tarea: nuevoEvento.estado_tarea || ESTADO_TAREA_DEFAULT,
         tarea_client_id: clienteId,
-        tarea_vendedor_id: nuevoEvento.tarea_vendedor_id === "" ? null : nuevoEvento.tarea_vendedor_id,
-        created_by: userEmail || "usuario@sistema.com"
+        tarea_vendedor_id:
+          nuevoEvento.tarea_vendedor_id === ""
+            ? null
+            : nuevoEvento.tarea_vendedor_id,
+        created_by: userEmail || "usuario@sistema.com",
       };
-      
+
       const nuevoEventoCreado = await crearEvento(eventoData);
-      
+
       // Limpiar formulario y cerrar modal
       setNuevoEvento({
         titulo: "",
         descripcion: "",
         fecha_realizacion: new Date().toISOString().slice(0, 16),
         estado_tarea: ESTADO_TAREA_DEFAULT,
-        tarea_vendedor_id: ""
+        tarea_vendedor_id: "",
       });
       setMostrarModal(false);
-      
+
       // Actualizar la lista de eventos y la fecha de recontacto
-      const eventosActualizados = nuevoEventoCreado ? [...eventos, nuevoEventoCreado] : eventos;
+      const eventosActualizados = nuevoEventoCreado
+        ? [...eventos, nuevoEventoCreado]
+        : eventos;
       setEventos(eventosActualizados);
       actualizarFechaRecontacto(eventosActualizados);
     } catch (err: any) {
@@ -168,14 +191,16 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
 
   const handleEliminarEvento = async (eventoId: string) => {
     if (!confirm("¿Estás seguro de que deseas eliminar este evento?")) return;
-    
+
     try {
       await eliminarEvento(eventoId);
-      
+
       // Actualizar lista de eventos
-      const eventosActualizados = eventos.filter(evento => evento.id !== eventoId);
+      const eventosActualizados = eventos.filter(
+        (evento) => evento.id !== eventoId
+      );
       setEventos(eventosActualizados);
-      
+
       // Actualizar fecha de recontacto
       actualizarFechaRecontacto(eventosActualizados);
     } catch (err) {
@@ -187,16 +212,19 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
   const handleCambiarEstado = async (eventoId: string, nuevoEstado: string) => {
     try {
       const resultado = await actualizarEstadoEvento(eventoId, nuevoEstado);
-      
+
       if (resultado) {
         // Actualizar lista de eventos
-        setEventos(prev => prev.map(evento => 
-          evento.id === eventoId ? { ...evento, estado_tarea: nuevoEstado } : evento
-        ));
+        setEventos((prev) =>
+          prev.map((evento) =>
+            evento.id === eventoId
+              ? { ...evento, estado_tarea: nuevoEstado }
+              : evento
+          )
+        );
       } else {
         throw new Error("No se pudo actualizar el estado del evento");
       }
-      
     } catch (err) {
       console.error("Error al actualizar estado:", err);
       setError("Error al actualizar el estado del evento");
@@ -205,36 +233,36 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
 
   const formatearFecha = (fechaISO: string) => {
     const fecha = new Date(fechaISO);
-    return fecha.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return fecha.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">
-          Eventos
-        </h2>
-        <button 
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-800">Eventos</h2>
+      </div>
+      <div className="flex justify-end mb-6">
+        <button
           onClick={() => setMostrarModal(true)}
-          className="bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-2 px-4 rounded-md flex items-center"
+          className="cursor-pointer bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-md flex items-center"
         >
           <Plus size={16} className="mr-2" />
           Nuevo Evento
         </button>
       </div>
-      
+
       {error && (
         <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4">
           {error}
         </div>
       )}
-      
+
       <EventosList
         eventos={eventos}
         cargando={cargando}
@@ -242,7 +270,7 @@ export const RecontactoCliente = ({ clienteId, onFechaRecontactoChange }: Recont
         onEliminarEvento={handleEliminarEvento}
         formatearFecha={formatearFecha}
       />
-      
+
       <EventoModal
         mostrar={mostrarModal}
         nuevoEvento={nuevoEvento}

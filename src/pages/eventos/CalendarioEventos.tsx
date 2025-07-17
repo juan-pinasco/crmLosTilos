@@ -11,7 +11,7 @@ import type { Evento } from "../../types/EventsType";
 import type { Vendedor } from "../../types/SellersType";
 import type { Cliente } from "../../types/ClientsType";
 import { useNavigate } from "react-router";
-import { ESTADOS_TAREA } from "../../constants/estadosTareas";
+import { ESTADOS_TAREA, getEventoCalendarioColor } from "../../constants/estadosTareas";
 
 // Configurar el localizador para español
 const locales = {
@@ -129,21 +129,8 @@ export const CalendarioEventos = () => {
 
   // Función para obtener el estilo del evento según su estado
   const eventStyleGetter = (event: CalendarEvent) => {
-    let backgroundColor = '#3174ad'; // Color por defecto
-    
-    switch (event.estado?.toLowerCase()) {
-      case "completado":
-        backgroundColor = '#10b981'; // Verde
-        break;
-      case "en progreso":
-        backgroundColor = '#f59e0b'; // Amarillo
-        break;
-      case "cancelado":
-        backgroundColor = '#ef4444'; // Rojo
-        break;
-      default:
-        backgroundColor = '#6b7280'; // Gris
-    }
+    // Obtener el color de fondo según el estado desde las constantes
+    const backgroundColor = getEventoCalendarioColor(event.estado);
     
     return {
       style: {
