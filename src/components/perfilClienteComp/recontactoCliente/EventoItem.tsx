@@ -1,4 +1,5 @@
 import { Calendar, Check, X, Trash } from "lucide-react";
+import { useNavigate } from "react-router";
 import type { Evento } from "../../../types/EventsType";
 import { getEstadoClass } from "../../../constants/estadosTareas";
 
@@ -15,6 +16,7 @@ export const EventoItem = ({
   onEliminarEvento, 
   formatearFecha 
 }: EventoItemProps) => {
+  const navigate = useNavigate();
   // Función para obtener las clases de fondo para tarjetas según el estado
   const getEventoCardBgClass = (estado: string | null | undefined): string => {
     if (!estado) return 'bg-white';
@@ -34,7 +36,8 @@ export const EventoItem = ({
   };
   return (
     <div 
-      className={`border rounded-lg p-4 ${getEventoCardBgClass(evento.estado_tarea)}`}
+      onClick={() => navigate(`/detalle-evento/${evento.id}`)}
+      className={`border rounded-lg p-4 cursor-pointer hover:shadow-md transition ${getEventoCardBgClass(evento.estado_tarea)}`}
     >
       <div className="flex justify-between items-start">
         <div>
@@ -47,7 +50,7 @@ export const EventoItem = ({
         <div className="flex space-x-2">
           {evento.estado_tarea !== 'Completado' && (
             <button
-              onClick={() => onCambiarEstado(evento.id, 'Completado')}
+              onClick={(e) => { e.stopPropagation(); onCambiarEstado(evento.id, 'Completado'); }}
               className="text-green-600 hover:text-green-800"
               title="Marcar como completado"
             >
@@ -56,7 +59,7 @@ export const EventoItem = ({
           )}
           {evento.estado_tarea === 'Completado' && (
             <button
-              onClick={() => onCambiarEstado(evento.id, 'Pendiente')}
+              onClick={(e) => { e.stopPropagation(); onCambiarEstado(evento.id, 'Pendiente'); }}
               className="text-amber-600 hover:text-amber-800"
               title="Marcar como pendiente"
             >
@@ -64,7 +67,7 @@ export const EventoItem = ({
             </button>
           )}
           <button
-            onClick={() => onEliminarEvento(evento.id)}
+            onClick={(e) => { e.stopPropagation(); onEliminarEvento(evento.id); }}
             className="text-red-600 hover:text-red-800"
             title="Eliminar evento"
           >

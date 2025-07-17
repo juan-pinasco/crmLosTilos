@@ -3,12 +3,12 @@ import { useState, useEffect } from "react";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
 import { useNavigate } from "react-router";
-import { Plus } from 'lucide-react';
+import { Plus, RotateCcw } from 'lucide-react';
 import { fetchClientes } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
 import { ClientesTable } from "../components/homeClientes/ClientesTable";
-import { FiltrosCliente } from "../components/homeClientes/FiltrosCliente";
-import type { FiltrosSeleccionados } from "../components/homeClientes/FiltrosCliente";
+import { FiltrosCliente } from "../components/homeClientes/filters/FiltrosCliente";
+import type { FiltrosSeleccionados } from "../components/homeClientes/filters/FiltrosCliente";
 
 // Constante para la clave de localStorage
 const FILTROS_STORAGE_KEY = 'clientesHome_filtros';
@@ -31,6 +31,30 @@ export const Home = () => {
         };
   });
   const navigate = useNavigate();
+
+  // Maneja la limpieza de filtros y estados persistidos en localStorage
+  const handleLimpiarFiltros = () => {
+    const keysToRemove = [
+      'clientesHome_filtros',
+      'clientesTable_sortConfig',
+      'clientesTable_searchTerm',
+      'clientesTable_vendedorFilter',
+      'clientesTable_selectedColumns',
+    'clientesTable_dateFilters'
+    ];
+
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // Restablecer los filtros locales
+    setFiltros({
+      tiposCliente: [],
+      estadosCliente: [],
+      temperaturasCliente: []
+    });
+
+    // Recargar la página para garantizar que la tabla también se reinicie
+    window.location.reload();
+  };
 
 
 
@@ -126,13 +150,22 @@ export const Home = () => {
       <div className="w-full px-4 md:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Tabla de Clientes</h1>
-          <button
-            onClick={() => navigate("/create-client")}
-            className="cursor-pointer px-2 py-2 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
-          >
-            <Plus size={20} className="mr-2 inline-block" />
-            Nuevo Cliente
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate("/create-client")}
+              className="cursor-pointer px-2 py-2 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
+            >
+              <Plus size={20} className="mr-2 inline-block" />
+              Nuevo Cliente
+            </button>
+            <button
+              onClick={handleLimpiarFiltros}
+              className="cursor-pointer px-3 py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition-colors"
+            >
+              <RotateCcw size={20}  />
+              
+            </button>
+          </div>
         </div>
         
         {/* Contenedor principal que divide la pantalla en dos columnas */}

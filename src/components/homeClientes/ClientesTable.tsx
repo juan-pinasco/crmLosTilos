@@ -19,7 +19,8 @@ const STORAGE_KEYS = {
   SORT_CONFIG: 'clientesTable_sortConfig',
   SEARCH_TERM: 'clientesTable_searchTerm',
   SELECTED_COLUMNS: 'clientesTable_selectedColumns',
-  VENDEDOR_FILTER: 'clientesTable_vendedorFilter'
+  VENDEDOR_FILTER: 'clientesTable_vendedorFilter',
+  DATE_FILTERS: 'clientesTable_dateFilters'
 };
 
 interface ClientesTableProps {
@@ -53,6 +54,16 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
     STORAGE_KEYS.VENDEDOR_FILTER, 
     'todos'
   );
+
+  // Filtros de rango de fechas por columna
+  const [dateFilters, setDateFilters] = useLocalStorage<{ [key: string]: { from: string | null; to: string | null } }>(
+    STORAGE_KEYS.DATE_FILTERS,
+    {}
+  );
+
+  const handleApplyDateFilter = (key: string, range: { from: string | null; to: string | null }) => {
+    setDateFilters(prev => ({ ...prev, [key]: range }));
+  };
 
   // Definir las columnas disponibles para la tabla de clientes
   const availableColumns = [
@@ -170,6 +181,26 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
         });
       });
     }
+
+    // Aplicar filtros de rango de fechas
+    // Función utilitaria para convertir 'YYYY-MM-DD' a timestamp local (00:00 hora local)
+    const toLocalTimestamp = (dateInput: string): number => {
+      const [y, m, d] = dateInput.split('-').map(Number);
+      return new Date(y, m - 1, d, 0, 0, 0, 0).getTime();
+    };
+
+    Object.entries(dateFilters).forEach(([key, { from, to }]) => {
+      if (from || to) {
+        filteredClientes = filteredClientes.filter(cliente => {
+          const dateStr = cliente[key as keyof Cliente] as string | null | undefined;
+          if (!dateStr) return false;
+          const time = new Date(dateStr).getTime(); // El valor en la base ya incluye zona horaria.
+          if (from && time < toLocalTimestamp(from)) return false;
+          if (to && time > toLocalTimestamp(to) + 24 * 60 * 60 * 1000 - 1) return false; // inclusivo hasta fin del día
+          return true;
+        });
+      }
+    });
     
     // Ordenar los clientes según la configuración actual
     let sortableClientes = [...filteredClientes];
@@ -212,7 +243,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
       });
     }
     return sortableClientes;
-  }, [clientes, sortConfig, searchTerm, selectedColumns, vendedores, vendedorFilter]);
+  }, [clientes, sortConfig, searchTerm, selectedColumns, vendedores, vendedorFilter, dateFilters]);
 
   return (
     <>
@@ -240,6 +271,8 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
               selectedColumns={selectedColumns}
               sortConfig={sortConfig}
               requestSort={requestSort}
+              dateFilters={dateFilters}
+              onApplyDateFilter={handleApplyDateFilter}
             />
 
             <tbody className="bg-white divide-y divide-gray-200">

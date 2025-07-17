@@ -24,7 +24,7 @@ export const EventoInfoCard: React.FC<EventoInfoCardProps> = ({
     <div className="bg-white rounded-lg p-4 border border-gray-200">
       <h3 className="text-lg font-semibold mb-3 flex items-center text-gray-700">
         <Calendar size={18} className="mr-2 text-blue-500" />
-        Información del Evento
+        Información de la Tarea
       </h3>
       <div className="space-y-4">
         <div>

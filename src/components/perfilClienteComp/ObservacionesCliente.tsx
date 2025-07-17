@@ -190,7 +190,7 @@ export const ObservacionesCliente = ({
         observaciones.map((observacion) => (
           <div
             key={observacion.id}
-            className="mb-6 border border-gray-200 rounded-lg p-4"
+            className="mb-6 border border-gray-500 rounded-lg p-4"
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">

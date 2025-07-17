@@ -178,7 +178,7 @@ export const DetalleEvento = () => {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Detalles del Evento</h1>
+          <h1 className="text-2xl font-bold">Detalles de la Tarea</h1>
         </div>
 
         {loading ? (
