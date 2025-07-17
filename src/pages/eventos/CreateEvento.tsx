@@ -160,7 +160,7 @@ export const CreateEvento = () => {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Crear Nuevo Evento</h1>
+          <h1 className="text-2xl font-bold">Crear Nueva Tarea</h1>
           <button
             onClick={() => navigate("/eventos")}
             className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded"
@@ -345,9 +345,9 @@ export const CreateEvento = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-md transition-colors"
+                  className="cursor-pointer bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-md transition-colors"
                 >
-                  {loading ? "Guardando..." : "Guardar Evento"}
+                  {loading ? "Guardando..." : "Guardar Tarea"}
                 </button>
               </div>
             </form>

@@ -17,13 +17,13 @@ export const EventosList = ({
   formatearFecha
 }: EventosListProps) => {
   if (cargando) {
-    return <div className="text-center py-4">Cargando eventos...</div>;
+    return <div className="text-center py-4">Cargando tareas...</div>;
   }
   
   if (eventos.length === 0) {
     return (
       <div className="text-center py-4 text-gray-500">
-        No hay eventos programados para este cliente.
+        No hay tareas programadas para este cliente.
       </div>
     );
   }

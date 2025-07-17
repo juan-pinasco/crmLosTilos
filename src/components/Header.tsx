@@ -82,7 +82,7 @@ export const Header = () => {
                 }}
                 className={`py-2 px-3 font-medium ${isActive('/eventos')}`}
               >
-                Eventos
+                Tareas
               </a>
             </nav>
           )}

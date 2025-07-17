@@ -94,7 +94,7 @@ export const Eventos = () => {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Eventos</h1>
+          <h1 className="text-2xl font-bold">Tareas</h1>
           <div className="flex space-x-2">
             <button
               onClick={() => navigate("/calendario-eventos")}
@@ -106,7 +106,7 @@ export const Eventos = () => {
               onClick={() => navigate("/create-evento")}
               className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
             >
-              Crear Evento
+              Crear Tarea
             </button>
           </div>
         </div>
@@ -142,6 +142,12 @@ export const Eventos = () => {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
+                    Descripción
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
                     Ejecutor
                   </th>
                   <th
@@ -156,12 +162,7 @@ export const Eventos = () => {
                   >
                     Creado por
                   </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Descripción
-                  </th>
+                  
                 </tr>
               </thead>
 
@@ -183,6 +184,9 @@ export const Eventos = () => {
                         {evento.cliente ? evento.cliente.nombre : getNombreCliente(evento.tarea_client_id)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {evento.descripcion || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {evento.vendedor ? evento.vendedor.nombre : getNombreVendedor(evento.tarea_vendedor_id)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -194,9 +198,6 @@ export const Eventos = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {evento.created_by || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {evento.descripcion || "-"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <button
@@ -217,7 +218,7 @@ export const Eventos = () => {
                       colSpan={8}
                       className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center"
                     >
-                      No hay eventos disponibles
+                      No hay tareas disponibles
                     </td>
                   </tr>
                 )}

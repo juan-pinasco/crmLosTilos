@@ -244,16 +244,14 @@ export const RecontactoCliente = ({
 
   return (
     <div>
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-gray-800">Eventos</h2>
-      </div>
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-xl font-bold text-gray-800">Tareas con el cliente</h2>
         <button
           onClick={() => setMostrarModal(true)}
-          className="cursor-pointer bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-md flex items-center"
+          className="cursor-pointer bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-2 rounded-md flex items-center"
         >
-          <Plus size={16} className="mr-2" />
-          Nuevo Evento
+          <Plus size={20} />
+          Tarea
         </button>
       </div>
 

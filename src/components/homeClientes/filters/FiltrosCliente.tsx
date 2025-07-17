@@ -1,8 +1,8 @@
 import { useEffect, useCallback } from "react";
-import { TIPOS_CLIENTE } from "../../constants/tiposCliente";
-import { ESTADOS_CLIENTE } from "../../constants/estadosCliente";
-import { TEMPERATURAS_CLIENTE } from "../../constants/temperaturasCliente";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { TIPOS_CLIENTE } from "../../../constants/tiposCliente";
+import { ESTADOS_CLIENTE } from "../../../constants/estadosCliente";
+import { TEMPERATURAS_CLIENTE } from "../../../constants/temperaturasCliente";
+import { useLocalStorage } from "../../../hooks/useLocalStorage";
 
 // Constante para la clave de localStorage
 const FILTROS_STORAGE_KEY = 'clientesHome_filtros';
