@@ -34,6 +34,7 @@ export async function clearOnLogout() {
   const patterns = [
     'clientesHome_filtros',
     'clientesTable_',
+    'eventosTable_',
     'filter',
     'sort',
     'page',
