@@ -1,7 +1,7 @@
 import { useEffect, useCallback } from "react";
-import { TIPOS_CLIENTE } from "../../../constants/tiposCliente";
-import { ESTADOS_CLIENTE } from "../../../constants/estadosCliente";
-import { TEMPERATURAS_CLIENTE } from "../../../constants/temperaturasCliente";
+import { TIPOS_CLIENTE, TIPO_CLIENTE_COLORS } from "../../../constants/tiposCliente";
+import { ESTADOS_CLIENTE, ESTADO_CLIENTE_COLORS } from "../../../constants/estadosCliente";
+import { TEMPERATURAS_CLIENTE, TEMPERATURA_CLIENTE_COLORS } from "../../../constants/temperaturasCliente";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 
 // Constante para la clave de localStorage
@@ -95,10 +95,9 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
 
   return (
     <div className="bg-white p-4 rounded-lg shadow h-full sticky top-4 max-w-xs">
-      <h2 className="text-lg font-medium text-gray-800 mb-4">Filtros</h2>
+      <h2 className="text-xl font-medium text-gray-800 mb-6">Filtros</h2>
       
       <div className="flex flex-col gap-6">
-       
 
         {/* Filtro por estado de cliente */}
         <div>
@@ -112,12 +111,13 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
                   checked={filtros.estadosCliente.includes(estado)}
                   onChange={(e) => handleEstadoClienteChange(estado, e.nativeEvent as unknown as React.MouseEvent)}
                 />
-                <span className="ml-2 text-gray-700">{estado}</span>
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_CLIENTE_COLORS[estado]}`}>{estado}</span>
               </label>
             ))}
           </div>
         </div>
 
+        <div className="border-t border-gray-400" />
         {/* Filtro por temperatura de cliente */}
         <div>
           <h3 className="font-medium text-gray-700 mb-2">Temperatura</h3>
@@ -130,11 +130,12 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
                   checked={filtros.temperaturasCliente.includes(temperatura)}
                   onChange={(e) => handleTemperaturaClienteChange(temperatura, e.nativeEvent as unknown as React.MouseEvent)}
                 />
-                <span className="ml-2 text-gray-700">{temperatura}</span>
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${TEMPERATURA_CLIENTE_COLORS[temperatura]}`}>{temperatura}</span>
               </label>
             ))}
           </div>
         </div>
+        <div className="border-t border-gray-400" />
          {/* Filtro por tipo de cliente */}
          <div>
           <h3 className="font-medium text-gray-700 mb-2">Tipo de Cliente</h3>
@@ -147,7 +148,7 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
                   checked={filtros.tiposCliente.includes(tipo)}
                   onChange={(e) => handleTipoClienteChange(tipo, e.nativeEvent as unknown as React.MouseEvent)}
                 />
-                <span className="ml-2 text-gray-700">{tipo}</span>
+                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${TIPO_CLIENTE_COLORS[tipo]}`}>{tipo}</span>
               </label>
             ))}
           </div>
