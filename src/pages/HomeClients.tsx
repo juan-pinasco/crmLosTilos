@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 import { Plus, RotateCcw } from 'lucide-react';
 import { fetchClientes } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
+import { fetchPendientesPorCliente } from "../data/EventosCrud";
 import { ClientesTable } from "../components/homeClientes/ClientesTable";
 import { FiltrosCliente } from "../components/homeClientes/filters/FiltrosCliente";
 import type { FiltrosSeleccionados } from "../components/homeClientes/filters/FiltrosCliente";
@@ -18,6 +19,7 @@ export const Home = () => {
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendientesMap, setPendientesMap] = useState<Map<string, number>>(new Map());
   
   // Inicializar filtros desde localStorage o usar valores predeterminados
   const [filtros, setFiltros] = useState<FiltrosSeleccionados>(() => {
@@ -68,6 +70,13 @@ export const Home = () => {
           setVendedores(vendedoresData);
         }
 
+        // Cargar pendientes
+        try {
+          const pendientes = await fetchPendientesPorCliente();
+          setPendientesMap(pendientes);
+        } catch (e) {
+          console.error("Error cargando pendientes", e);
+        }
         // Cargar clientes
         const clientesData = await fetchClientes();
         if (clientesData) {
@@ -183,6 +192,7 @@ export const Home = () => {
             <ClientesTable 
               clientes={clientesFiltrados}
               vendedores={vendedores}
+              pendientesMap={pendientesMap}
               loading={loading}
               onClienteDeleted={handleClienteDeleted}
             />

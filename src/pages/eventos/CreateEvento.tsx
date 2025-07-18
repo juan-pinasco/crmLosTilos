@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Header } from "../../components/Header";
-import { useNavigate } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { crearEvento } from "../../data/EventosCrud";
 import { fetchClientes } from "../../data/ClientsCrud";
 import { fetchVendedores } from "../../data/VendedoresCrud";
@@ -12,6 +12,7 @@ import { ESTADOS_TAREA, ESTADO_TAREA_DEFAULT } from "../../constants/estadosTare
 
 export const CreateEvento = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
@@ -35,6 +36,15 @@ export const CreateEvento = () => {
   const [selectedClienteNombre, setSelectedClienteNombre] = useState("");
 
   // Opciones para el estado de la tarea se importan desde constants/estadosTareas.ts
+
+  useEffect(() => {
+    // Revisar si viene fecha en query params
+    const params = new URLSearchParams(location.search);
+    const fechaQuery = params.get('fecha');
+    if (fechaQuery) {
+      setFormData(prev => ({ ...prev, fecha_realizacion: fechaQuery }));
+    }
+  }, [location.search]);
 
   useEffect(() => {
     const loadData = async () => {

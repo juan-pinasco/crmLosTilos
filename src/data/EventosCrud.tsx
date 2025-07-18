@@ -182,6 +182,30 @@ export const actualizarEvento = async (eventoId: string, eventoData: {
   }
 };
 
+// ======================================================
+// Obtener cantidad de tareas pendientes por cliente
+// Devuelve un Map<clienteId, cantidad>
+// ======================================================
+export const fetchPendientesPorCliente = async () => {
+  const { data, error } = await supabase
+    .from("eventos")
+    .select("id, tarea_client_id")
+    .eq("estado_tarea", "Pendiente");
+
+  if (error) {
+    console.error("Error al obtener pendientes:", error);
+    throw error;
+  }
+
+  const map = new Map<string, number>();
+  (data || []).forEach((row: any) => {
+    const idCliente = row.tarea_client_id as string;
+    if (!idCliente) return;
+    map.set(idCliente, (map.get(idCliente) || 0) + 1);
+  });
+  return map;
+};
+
 // Obtener evento por ID
 export const fetchEventoPorId = async (eventoId: string) => {
   try {

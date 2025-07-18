@@ -26,6 +26,7 @@ const STORAGE_KEYS = {
 interface ClientesTableProps {
   clientes: Cliente[];
   vendedores: Vendedor[];
+  pendientesMap: Map<string, number>;
   onClienteDeleted: () => void;
   loading: boolean;
 }
@@ -33,6 +34,7 @@ interface ClientesTableProps {
 export const ClientesTable: React.FC<ClientesTableProps> = ({
   clientes,
   vendedores,
+  pendientesMap,
   onClienteDeleted,
   loading
 }) => {
@@ -281,6 +283,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
                   <TableRow
                     key={cliente.id || index}
                     cliente={cliente}
+                    pendientes={pendientesMap.get(cliente.id) || 0}
                     selectedColumns={selectedColumns}
                     getNombreVendedor={getNombreVendedor}
                     handleDeleteClient={handleDeleteClient}

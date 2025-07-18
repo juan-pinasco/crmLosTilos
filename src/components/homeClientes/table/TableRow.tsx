@@ -14,6 +14,7 @@ import {
 
 interface TableRowProps {
   cliente: Cliente;
+  pendientes: number;
   selectedColumns: { [key: string]: boolean };
   getNombreVendedor: (id: string) => string;
   handleDeleteClient: (id: string) => void;
@@ -22,6 +23,7 @@ interface TableRowProps {
 
 const TableRow: React.FC<TableRowProps> = ({
   cliente,
+  pendientes,
   selectedColumns,
   getNombreVendedor,
   handleDeleteClient,
@@ -44,7 +46,7 @@ const TableRow: React.FC<TableRowProps> = ({
         <DateCell date={cliente.fecha_recontacto} />
       )}
       {selectedColumns['nombre'] && (
-        <NameCell text={cliente.nombre} />
+        <NameCell text={cliente.nombre} pendientes={pendientes} />
       )}
       {selectedColumns['descripcion'] && (
         <DescriptionCell text={cliente.descripcion} />

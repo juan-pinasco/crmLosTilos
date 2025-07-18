@@ -22,12 +22,20 @@ export const TextCell: React.FC<{ text: string | null | undefined; maxLength?: n
 );
 
 // Celda de nombre (con estilo diferente)
-export const NameCell: React.FC<{ text: string | null | undefined; maxLength?: number }> = ({ 
+export const NameCell: React.FC<{ text: string | null | undefined; pendientes?: number; maxLength?: number }> = ({ 
   text, 
+  pendientes = 0,
   maxLength = 20 
 }) => (
   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" title={text || ''}>
-    {truncateText(text, maxLength)}
+    <div className="relative inline-flex items-center">
+      {truncateText(text, maxLength)}
+      {pendientes > 0 && (
+        <span className="ml-2 inline-flex items-center justify-center text-xs font-bold leading-none text-white bg-red-600 rounded-full w-5 h-5">
+          {pendientes}
+        </span>
+      )}
+    </div>
   </td>
 );
 

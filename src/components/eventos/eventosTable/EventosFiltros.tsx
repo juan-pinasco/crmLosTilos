@@ -89,6 +89,7 @@ const EventosFiltros: React.FC<EventosFiltrosProps> = ({
 
   return (
     <div className="bg-white px-4 py-3 border-b border-gray-200 rounded-lg shadow-sm">
+      <p className="text-lg font-bold">Filtros</p>
       <div className="flex flex-col space-y-3">
         {/* Fila superior: Estados y botón de limpiar */}
         <div className="flex items-center justify-between">
