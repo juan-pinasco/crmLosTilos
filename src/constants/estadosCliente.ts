@@ -4,18 +4,17 @@
  */
 
 // Estados de cliente disponibles
-export const ESTADOS_CLIENTE = ["Activo", "Inactivo", "Pendiente", "Archivado", "Baja"];
+export const ESTADOS_CLIENTE = ["Muy Activo", "Activo", "Inactivo", "Baja"];
 
 // Estado por defecto para nuevos clientes
 export const ESTADO_CLIENTE_DEFAULT = "Activo";
 
 // Mapeo de estados a clases de colores para Tailwind CSS
 export const ESTADO_CLIENTE_COLORS: Record<string, string> = {
-  "Activo": "bg-green-100 text-green-800",
-  "Inactivo": "bg-red-100 text-red-800",
-  "Pendiente": "bg-yellow-100 text-yellow-800",
-  "Archivado": "bg-red-100 text-red-800",
-  "Baja": "bg-red-100 text-red-800"
+  "Muy Activo": "bg-green-600 text-white",
+  "Activo": "bg-green-200 text-green-800",
+  "Inactivo": "bg-yellow-400 text-white",
+  "Baja": "bg-gray-500 text-white"
 };
 
 // Interfaz para el estado de cliente

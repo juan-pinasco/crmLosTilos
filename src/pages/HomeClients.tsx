@@ -147,20 +147,20 @@ export const Home = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       <Header />
-      <div className="w-full px-4 md:px-8 py-8">
+      <div className="w-full px-4 md:px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">Tabla de Clientes</h1>
           <div className="flex gap-2">
             <button
               onClick={() => navigate("/create-client")}
-              className="cursor-pointer px-2 py-2 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
+              className="cursor-pointer px-2 py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition-colors"
             >
-              <Plus size={20} className="mr-2 inline-block" />
-              Nuevo Cliente
+              <Plus size={20} className="mr-1 inline-block" />
+              Crear Cliente
             </button>
             <button
               onClick={handleLimpiarFiltros}
-              className="cursor-pointer px-3 py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition-colors"
+              className="cursor-pointer px-3 py-2 bg-gray-300 text-black font-medium rounded hover:bg-gray-400 transition-colors"
             >
               <RotateCcw size={20}  />
               
@@ -171,7 +171,7 @@ export const Home = () => {
         {/* Contenedor principal que divide la pantalla en dos columnas */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Columna izquierda para los filtros */}
-          <div className="md:w-1/6">
+          <div className="md:w-1/8">
             <FiltrosCliente 
               onFiltrosChange={handleFiltrosChange} 
               initialFiltros={filtros} 
@@ -179,7 +179,7 @@ export const Home = () => {
           </div>
           
           {/* Columna derecha para la tabla */}
-          <div className="md:w-5/6">
+          <div className="md:w-7/8">
             <ClientesTable 
               clientes={clientesFiltrados}
               vendedores={vendedores}
