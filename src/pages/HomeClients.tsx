@@ -180,7 +180,7 @@ export const Home = () => {
         {/* Contenedor principal que divide la pantalla en dos columnas */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Columna izquierda para los filtros */}
-          <div className="md:w-1/8">
+          <div className="md:w-2/10">
             <FiltrosCliente 
               onFiltrosChange={handleFiltrosChange} 
               initialFiltros={filtros} 
@@ -188,7 +188,7 @@ export const Home = () => {
           </div>
           
           {/* Columna derecha para la tabla */}
-          <div className="md:w-7/8">
+          <div className="md:w-8/10">
             <ClientesTable 
               clientes={clientesFiltrados}
               vendedores={vendedores}

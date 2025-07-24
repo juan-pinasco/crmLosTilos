@@ -11,10 +11,7 @@
 const ESTADOS_CONFIG = [
   // [nombre del estado, clase de color para Tailwind]
   ["Pendiente", "bg-red-600 text-white"],
-  ["En Progreso", "bg-green-600 text-white"],
   ["Completado", "bg-green-100 text-green-800"],
-  ["Cancelado", "bg-yellow-100 text-white-800"],
-  ["En Espera", "bg-blue-600 text-white"],
 ] as const;
 
 // Define aquí el estado por defecto (debe ser uno de los estados definidos arriba)
