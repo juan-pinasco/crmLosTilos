@@ -101,7 +101,6 @@ export const Header = () => {
 
   return (
     <header className="bg-white shadow-md p-4">
-      <div className="container mx-auto">
         <div className="flex justify-between items-center">
           {/* Título a la izquierda */}
           <div className="flex items-center gap-2">
@@ -157,7 +156,6 @@ export const Header = () => {
             </div>
           )}
         </div>
-      </div>
     </header>
   );
 };

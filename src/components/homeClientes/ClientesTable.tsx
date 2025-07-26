@@ -69,18 +69,18 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
 
   // Definir las columnas disponibles para la tabla de clientes
   const availableColumns = [
-    { key: 'ultima_interaccion', label: 'Última Interacción' },
-    { key: 'fecha_recontacto', label: 'Recontacto' },
+    { key: 'ultima_interaccion', label: 'Última\nInteracción' },
     { key: 'nombre', label: 'Nombre' },
-    { key: 'descripcion', label: 'Descripción' },
     { key: 'email', label: 'Email' },
     { key: 'telefono', label: 'Teléfono' },
+    { key: 'descripcion', label: 'Descripción' },
     { key: 'pais', label: 'País' },
     { key: 'ciudad', label: 'Ciudad' },
     { key: 'barrio', label: 'Barrio' },
     { key: 'tipo_cliente', label: 'Tipo Cliente' },
     { key: 'estado', label: 'Estado' },
     { key: 'temperatura', label: 'Temperatura' },
+    { key: 'fecha_recontacto', label: 'Fecha a\ncontactar' },
     { key: 'vendedor_id', label: 'Vendedor Asignado' },
     { key: 'empleo', label: 'Empleo' }
   ];
@@ -266,7 +266,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <div className="overflow-x-auto shadow-md rounded-lg">
+        <div className="overflow-x-auto overflow-y-auto  shadow-md rounded-lg h-auto max-h-[calc(100vh-235px)]">
           <table className="min-w-full divide-y divide-gray-200">
             <TableHeader
               availableColumns={availableColumns}

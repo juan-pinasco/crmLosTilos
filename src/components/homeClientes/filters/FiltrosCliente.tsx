@@ -94,7 +94,7 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
   }, [filtros, onFiltrosChange]);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow h-full sticky top-4 max-w-xs">
+    <div className="bg-white p-4 rounded-lg shadow h-auto sticky top-4 max-w-xs">
       <h2 className="text-xl font-medium text-gray-800 mb-6">Filtros</h2>
       
       <div className="flex flex-col gap-6">
