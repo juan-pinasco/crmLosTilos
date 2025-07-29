@@ -266,7 +266,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <div className="overflow-x-auto overflow-y-auto  shadow-md rounded-lg h-auto max-h-[calc(100vh-235px)]">
+        <div className="overflow-x-auto overflow-y-auto  shadow-md rounded-lg h-auto max-h-[calc(100vh-175px)]">
           <table className="min-w-full divide-y divide-gray-200">
             <TableHeader
               availableColumns={availableColumns}

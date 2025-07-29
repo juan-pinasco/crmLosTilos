@@ -2,8 +2,6 @@ import { Header } from "../components/Header";
 import { useState, useEffect } from "react";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
-import { useNavigate } from "react-router";
-import { Plus, RotateCcw } from "lucide-react";
 import { fetchClientes } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
 import { fetchPendientesPorCliente } from "../data/EventosCrud";
@@ -34,10 +32,9 @@ export const Home = () => {
           temperaturasCliente: [],
         };
   });
-  const navigate = useNavigate();
 
   // Maneja la limpieza de filtros y estados persistidos en localStorage
-  const handleLimpiarFiltros = () => {
+ /*  const handleLimpiarFiltros = () => {
     const keysToRemove = [
       "clientesHome_filtros",
       "clientesTable_sortConfig",
@@ -58,7 +55,7 @@ export const Home = () => {
 
     // Recargar la página para garantizar que la tabla también se reinicie
     window.location.reload();
-  };
+  }; */
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -166,7 +163,7 @@ export const Home = () => {
         {/* Contenedor principal que divide la pantalla en dos columnas */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Columna izquierda para los filtros */}
-          <div className="md:w-2/10 h-[calc(100vh-111px)] overflow-y-auto">
+          <div className="md:w-2/10 2xl:w-1/10 h-[calc(100vh-111px)] overflow-y-auto">
             <FiltrosCliente
               onFiltrosChange={handleFiltrosChange}
               initialFiltros={filtros}
@@ -174,22 +171,8 @@ export const Home = () => {
           </div>
 
           {/* Columna derecha para la tabla */}
-          <div className="md:w-8/10">
-            <div className="flex gap-2 justify-end mb-4">
-              <button
-                onClick={() => navigate("/create-client")}
-                className="cursor-pointer px-2 py-2 bg-blue-500 text-white font-medium rounded hover:bg-blue-600 transition-colors"
-              >
-                <Plus size={20} className="mr-1 inline-block" />
-                Crear Cliente
-              </button>
-              <button
-                onClick={handleLimpiarFiltros}
-                className="cursor-pointer px-3 py-2 bg-gray-300 text-black font-medium rounded hover:bg-gray-400 transition-colors"
-              >
-                <RotateCcw size={20} />
-              </button>
-            </div>
+          <div className="md:w-8/10 2xl:w-9/10">
+            
             <ClientesTable
               clientes={clientesFiltrados}
               vendedores={vendedores}

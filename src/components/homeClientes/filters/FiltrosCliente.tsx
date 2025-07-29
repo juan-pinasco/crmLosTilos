@@ -104,10 +104,10 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
           <h3 className="font-medium text-gray-700 mb-2">Estado</h3>
           <div className="space-y-2">
             {ESTADOS_CLIENTE.map(estado => (
-              <label key={`estado-${estado}`} className="flex items-center">
+              <label key={`estado-${estado}`} className="cursor-pointer flex items-center">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  className="cursor-pointer rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   checked={filtros.estadosCliente.includes(estado)}
                   onChange={(e) => handleEstadoClienteChange(estado, e.nativeEvent as unknown as React.MouseEvent)}
                 />
@@ -123,10 +123,10 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
           <h3 className="font-medium text-gray-700 mb-2">Temperatura</h3>
           <div className="space-y-2">
             {TEMPERATURAS_CLIENTE.map(temperatura => (
-              <label key={`temperatura-${temperatura}`} className="flex items-center">
+              <label key={`temperatura-${temperatura}`} className="cursor-pointer flex items-center">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  className="cursor-pointer rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   checked={filtros.temperaturasCliente.includes(temperatura)}
                   onChange={(e) => handleTemperaturaClienteChange(temperatura, e.nativeEvent as unknown as React.MouseEvent)}
                 />
@@ -141,10 +141,10 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
           <h3 className="font-medium text-gray-700 mb-2">Tipo de Cliente</h3>
           <div className="space-y-2">
             {TIPOS_CLIENTE.map(tipo => (
-              <label key={`tipo-${tipo}`} className="flex items-center">
+              <label key={`tipo-${tipo}`} className="cursor-pointer flex items-center">
                 <input
                   type="checkbox"
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  className="cursor-pointer rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                   checked={filtros.tiposCliente.includes(tipo)}
                   onChange={(e) => handleTipoClienteChange(tipo, e.nativeEvent as unknown as React.MouseEvent)}
                 />

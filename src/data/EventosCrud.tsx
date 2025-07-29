@@ -11,7 +11,8 @@ export const fetchEventos = async () => {
         vendedor:tarea_vendedor_id(id, nombre),
         cliente:tarea_client_id(id, nombre)
       `)
-      .order("fecha_realizacion", { ascending: false });
+      .order("estado_tarea", { ascending: false })
+      .order("fecha_realizacion", { ascending: true });
     
     if (error) {
       console.error("Error al obtener eventos:", error);
