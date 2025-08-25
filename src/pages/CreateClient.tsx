@@ -6,9 +6,17 @@ import { GetSession } from "../data/AuthsCrud";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
 import { useNavigate } from "react-router";
-import { TIPOS_CLIENTE, TIPO_CLIENTE_DEFAULT } from "../constants/tiposCliente";
-import { ESTADOS_CLIENTE, ESTADO_CLIENTE_DEFAULT } from "../constants/estadosCliente";
-import { TEMPERATURAS_CLIENTE, TEMPERATURA_CLIENTE_DEFAULT } from "../constants/temperaturasCliente";
+import {
+  /* TIPOS_CLIENTE, */ TIPO_CLIENTE_DEFAULT,
+} from "../constants/tiposCliente";
+import {
+  /* ESTADOS_CLIENTE, */
+  ESTADO_CLIENTE_DEFAULT,
+} from "../constants/estadosCliente";
+import {
+  /* TEMPERATURAS_CLIENTE, */
+  TEMPERATURA_CLIENTE_DEFAULT,
+} from "../constants/temperaturasCliente";
 
 export const CreateClient = () => {
   const navigate = useNavigate();
@@ -70,15 +78,22 @@ export const CreateClient = () => {
     try {
       // Obtener el usuario actual
       const currentUser = await GetSession();
-      
+
       // Crear una copia del formData con el created_by actualizado
       const clienteData = {
         ...formData,
-        created_by: currentUser?.email || "sistema"
+        created_by: currentUser?.email || "sistema",
       };
+
+      const clienteCreado = await create(clienteData as Cliente);
+      console.log("Cliente creado exitosamente:", clienteCreado);
       
-      await create(clienteData as Cliente);
-      navigate("/"); // Redirigir a la página principal después de crear
+      if (clienteCreado && clienteCreado[0]) {
+        navigate(`/profile-client/${clienteCreado[0].id}`);
+      } else {
+        setError("Error al crear el cliente. No se recibió confirmación del servidor.");
+      }
+      //navigate("/"); // Redirigir a la página principal después de crear
     } catch (err) {
       setError("Error al crear el cliente. Por favor, inténtelo de nuevo.");
       console.error(err);
@@ -97,7 +112,7 @@ export const CreateClient = () => {
               Crear Nuevo Cliente
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              Complete todos los campos para registrar un nuevo cliente
+              Complete los campos para crear nuevo cliente. "Nombre" y "Vendedor asignado" son requeridos
             </p>
           </div>
 
@@ -128,7 +143,7 @@ export const CreateClient = () => {
                   required
                   value={formData.nombre}
                   onChange={handleChange}
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-3"
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"
                 />
               </div>
 
@@ -145,7 +160,7 @@ export const CreateClient = () => {
                   id="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-3"
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"
                 />
               </div>
 
@@ -160,14 +175,44 @@ export const CreateClient = () => {
                   type="tel"
                   name="telefono"
                   id="telefono"
-                  required
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-4"
+                  value={formData.telefono === null || formData.telefono?.startsWith('no-phone-') ? '' : formData.telefono}
+                  onChange={(e) => {
+                    const value = e.target.value.trim();
+                    const randomId = Math.random().toString(36).substring(2, 10);
+                    setFormData(prev => ({
+                      ...prev,
+                      telefono: value === '' ? `no-phone-${randomId}` : value
+                    }));
+                  }}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"
                 />
               </div>
 
               <div>
+                <label
+                  htmlFor="vendedor_id"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Vendedor asignado
+                </label>
+                <select
+                  name="vendedor_id"
+                  id="vendedor_id"
+                  required
+                  value={formData.vendedor_id}
+                  onChange={handleChange}
+                  className="mt-1 block w-full py-3 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm p-2"
+                >
+                  <option value="">Seleccionar vendedor</option>
+                  {vendedores.map((vendedor) => (
+                    <option key={vendedor.id} value={vendedor.id}>
+                      {vendedor.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/*  <div>
                 <label
                   htmlFor="descripcion"
                   className="block text-sm font-medium text-gray-700"
@@ -184,7 +229,6 @@ export const CreateClient = () => {
                 />
               </div>
 
-              {/* Ubicación */}
               <div>
                 <label
                   htmlFor="pais"
@@ -234,10 +278,26 @@ export const CreateClient = () => {
                   onChange={handleChange}
                   className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-3"
                 />
-              </div>
+              </div> 
 
-              {/* Clasificación del cliente */}
               <div>
+                <label
+                  htmlFor="empleo"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Empleo
+                </label>
+                <input
+                  type="text"
+                  name="empleo"
+                  id="empleo"
+                  value={formData.empleo}
+                  onChange={handleChange}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-3"
+                />
+              </div> */}
+
+              {/*  <div>
                 <label
                   htmlFor="tipo_cliente"
                   className="block text-sm font-medium text-gray-700"
@@ -301,49 +361,7 @@ export const CreateClient = () => {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="vendedor_id"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Vendedor
-                </label>
-                <select
-                  name="vendedor_id"
-                  id="vendedor_id"
-                  value={formData.vendedor_id}
-                  onChange={handleChange}
-                  className="mt-1 block w-full py-3 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                >
-                  <option value="">Seleccionar vendedor</option>
-                  {vendedores.map((vendedor) => (
-                    <option key={vendedor.id} value={vendedor.id}>
-                      {vendedor.nombre}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Nuevo campo: Empleo */}
-              <div>
-                <label
-                  htmlFor="empleo"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Empleo
-                </label>
-                <input
-                  type="text"
-                  name="empleo"
-                  id="empleo"
-                  value={formData.empleo}
-                  onChange={handleChange}
-                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md py-3"
-                />
-              </div>
-              {/* La fecha de recontacto no se incluye en el formulario de creación */}
+              </div> */}
             </div>
 
             <div className="mt-8 flex justify-end">

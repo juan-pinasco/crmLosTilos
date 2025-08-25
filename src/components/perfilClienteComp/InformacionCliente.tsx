@@ -206,7 +206,10 @@ export const InformacionCliente = ({
                 <div className="mb-2 w-1/2 pr-2">
                   <h3 className="text-gray-500 text-sm">Teléfono</h3>
                   <div className="max-w-full break-words whitespace-pre-wrap overflow-y-auto p-1 rounded-md">
-                    {clienteLocal.telefono || vacio()}
+                    
+                    {clienteLocal.telefono && !clienteLocal.telefono.startsWith('no-phone-') 
+                      ? clienteLocal.telefono 
+                      : vacio()}
                   </div>
                 </div>
                 <div className="mb-2 w-1/2 pl-2">
