@@ -7,7 +7,7 @@
 export const TEMPERATURAS_CLIENTE = ["Caliente", "Templado", "Frío", "Helado"];
 
 // Temperatura por defecto para nuevos clientes
-export const TEMPERATURA_CLIENTE_DEFAULT = "Frío";
+export const TEMPERATURA_CLIENTE_DEFAULT = "Caliente";
 
 // Mapeo de temperaturas a clases de colores para Tailwind CSS
 export const TEMPERATURA_CLIENTE_COLORS: Record<string, string> = {

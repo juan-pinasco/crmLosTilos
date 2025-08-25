@@ -132,7 +132,7 @@ export const EdicionCliente = ({
             <h3 className="text-gray-500 text-sm mb-1">Teléfono</h3>
             <input
               type="text"
-              value={clienteEditado.telefono || ""}
+              value={clienteEditado.telefono && clienteEditado.telefono.startsWith('no-phone-') ? '' : clienteEditado.telefono || ""}
               onChange={(e) => setClienteEditado({...clienteEditado, telefono: e.target.value})}
               className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />

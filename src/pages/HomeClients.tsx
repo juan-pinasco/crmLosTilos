@@ -111,11 +111,13 @@ export const Home = () => {
   // Función para manejar cambios en los filtros y aplicarlos a la lista de clientes
   const handleFiltrosChange = (nuevosFiltros: FiltrosSeleccionados) => {
     setFiltros(nuevosFiltros);
-    // No guardar directamente en localStorage aquí; persistence la maneja FiltrosCliente
-    // storageManager.setItem(FILTROS_STORAGE_KEY, nuevosFiltros); // Si algún día se necesita
-
-    aplicarFiltros(clientes, nuevosFiltros);
+    // Ya no llamamos a aplicarFiltros aquí para evitar el ciclo infinito
   };
+
+  // Aplicar filtros cuando cambien los filtros o los clientes
+  useEffect(() => {
+    aplicarFiltros(clientes, filtros);
+  }, [clientes, filtros]);
 
   // Función para aplicar los filtros seleccionados a la lista de clientes
   const aplicarFiltros = (
