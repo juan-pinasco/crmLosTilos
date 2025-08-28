@@ -206,7 +206,7 @@ export const CreateEvento = () => {
                 {/* Descripción */}
                 <div className="col-span-2">
                   <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
-                    Descripción
+                    Descripción (opcional)
                   </label>
                   <textarea
                     id="descripcion"
@@ -253,13 +253,14 @@ export const CreateEvento = () => {
                 {/* Estado de la tarea */}
                 <div>
                   <label htmlFor="estado_tarea" className="block text-sm font-medium text-gray-700 mb-1">
-                    Estado
+                    Estado *
                   </label>
                   <select
                     id="estado_tarea"
                     name="estado_tarea"
                     value={formData.estado_tarea}
                     onChange={handleChange}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     {ESTADOS_TAREA.map((estado: string) => (
@@ -273,30 +274,31 @@ export const CreateEvento = () => {
                 {/* Cliente - Campo de búsqueda */}
                 <div className="relative">
                   <label htmlFor="cliente_search" className="block text-sm font-medium text-gray-700 mb-1">
-                    Cliente
+                    Cliente *
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="absolute mt-3 left-0 pl-3 flex items-center pointer-events-none">
                       <Search size={18} className="text-gray-400" />
                     </div>
                     <input
                       type="text"
                       id="cliente_search"
                       placeholder="Buscar cliente..."
-                      value={clienteSearch}
+                      value={clienteSearch || selectedClienteNombre}
                       onChange={handleClienteSearch}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                       autoComplete="off"
+                      required
                     />
                     {selectedClienteNombre && (
-                      <div className="mt-1 text-sm text-blue-600">
+                      <div className="mt-1 text-base text-blue-600">
                         Cliente seleccionado: <span className="font-medium">{selectedClienteNombre}</span>
                         <button 
                           type="button" 
                           onClick={() => selectCliente(null)} 
-                          className="ml-2 text-red-500 hover:text-red-700"
+                          className="cursor-pointer ml-3 text-red-500 hover:text-red-700"
                         >
-                          ×
+                          Quitar
                         </button>
                       </div>
                     )}
@@ -330,13 +332,14 @@ export const CreateEvento = () => {
                 {/* Ejecutor */}
                 <div>
                   <label htmlFor="tarea_vendedor_id" className="block text-sm font-medium text-gray-700 mb-1">
-                    Ejecutor
+                    Ejecutor *
                   </label>
                   <select
                     id="tarea_vendedor_id"
                     name="tarea_vendedor_id"
                     value={formData.tarea_vendedor_id}
                     onChange={handleChange}
+                    required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
                     <option value="">Sin ejecutor</option>

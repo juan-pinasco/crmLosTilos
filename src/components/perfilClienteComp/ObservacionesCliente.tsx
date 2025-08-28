@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trash, Plus } from "lucide-react";
+import { Trash } from "lucide-react";
 import type { Observacion } from "../../types/ObservationsType";
 import type { Cliente } from "../../types/ClientsType";
 import { 
@@ -190,11 +190,11 @@ export const ObservacionesCliente = ({
         observaciones.map((observacion) => (
           <div
             key={observacion.id}
-            className="mb-6 border border-gray-500 rounded-lg p-4"
+            className="mb-6 border border-gray-500 rounded-lg p-4 overflow-hidden"
           >
             <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
+              <div className="flex-1 ">
+                <div className="flex flex-wrap items-center space-x-2">
                   <p className="font-medium text-gray-700">
                     Fecha de contacto:
                   </p>
@@ -202,7 +202,7 @@ export const ObservacionesCliente = ({
                     {formatearFecha(observacion.created_at, true)}
                   </p>
                 </div>
-                <div className="flex items-center space-x-2 mb-3">
+                <div className="flex flex-wrap items-center space-x-2 mb-3">
                   <p className="font-medium text-gray-700">Vendedor:</p>
                   <p className="text-sm text-gray-500">
                     {observacion.id_vendedor
@@ -251,7 +251,6 @@ export const ObservacionesCliente = ({
           "Guardando..."
         ) : (
           <>
-            <Plus size={16} className="mr-2" />
             Agregar Observacion
           </>
         )}

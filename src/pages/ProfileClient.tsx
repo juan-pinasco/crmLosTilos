@@ -9,7 +9,7 @@ import type { Observacion } from "../types/ObservationsType";
 import { Header } from "../components/Header";
 // Importar los nuevos componentes
 import { ObservacionesCliente } from "../components/perfilClienteComp/ObservacionesCliente";
-import { InformacionCliente } from "../components/perfilClienteComp/InformacionCliente";
+import { InformacionClienteInline } from "../components/perfilClienteComp/InformacionClienteInline";
 import { RecontactoCliente } from "../components/perfilClienteComp/recontactoCliente/RecontactoCliente";
 
 export const ProfileClient = () => {
@@ -109,7 +109,7 @@ export const ProfileClient = () => {
 
         {/* Columna central - Información del cliente */}
         <div className="col-span-12 md:col-span-6">
-          <InformacionCliente 
+          <InformacionClienteInline 
             cliente={{
               ...cliente,
               fecha_recontacto: fechaRecontacto // Usamos el estado compartido

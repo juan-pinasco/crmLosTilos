@@ -23,18 +23,26 @@ export const EventoHeader: React.FC<EventoHeaderProps> = ({
   cancelarEdicion,
   setIsEditing
 }) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    guardarCambios();
+  };
+
   return (
     <div className="px-6 py-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
       <div className="flex justify-between items-start">
         <div className="w-full">
           {isEditing ? (
-            <input
-              type="text"
-              name="titulo"
-              value={editForm.titulo}
-              onChange={handleInputChange}
-              className="w-full text-xl font-bold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1"
-            />
+            <form onSubmit={handleSubmit} id="eventoForm">
+              <input
+                type="text"
+                name="titulo"
+                value={editForm.titulo}
+                onChange={handleInputChange}
+                required
+                className="w-full text-xl font-bold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1"
+              />
+            </form>
           ) : (
             <h2 className="text-xl font-bold text-gray-800">{evento.titulo}</h2>
           )}
@@ -52,12 +60,14 @@ export const EventoHeader: React.FC<EventoHeaderProps> = ({
           {isEditing ? (
             <div className="flex space-x-2">
               <button
-                onClick={guardarCambios}
+                type="submit"
+                form="eventoForm"
                 className="cursor-pointer bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded flex items-center"
               >
                 <Save size={16} className="mr-1" /> Guardar
               </button>
               <button
+                type="button"
                 onClick={cancelarEdicion}
                 className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded flex items-center"
               >

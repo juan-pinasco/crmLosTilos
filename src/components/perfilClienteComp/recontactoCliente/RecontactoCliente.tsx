@@ -82,12 +82,20 @@ export const RecontactoCliente = ({
     }
   };
 
-  // Función para obtener la fecha más lejana de los eventos
+  // Función para obtener la fecha más lejana de los eventos con estado pendiente
   const obtenerFechaMasLejana = (eventos: Evento[]): string | null => {
     if (!eventos || eventos.length === 0) return null;
 
-    // Ordenar eventos por fecha de realización (descendente)
-    const eventosOrdenados = [...eventos].sort((a, b) => {
+    // Filtrar solo eventos con estado "Pendiente"
+    const eventosPendientes = eventos.filter(
+      (evento) => evento.estado_tarea === "Pendiente"
+    );
+
+    // Si no hay eventos pendientes, retornar null
+    if (eventosPendientes.length === 0) return null;
+
+    // Ordenar eventos pendientes por fecha de realización (descendente)
+    const eventosOrdenados = [...eventosPendientes].sort((a, b) => {
       const fechaA = new Date(a.fecha_realizacion).getTime();
       const fechaB = new Date(b.fecha_realizacion).getTime();
       return fechaB - fechaA; // Orden descendente para obtener la más lejana primero
@@ -214,14 +222,18 @@ export const RecontactoCliente = ({
       const resultado = await actualizarEstadoEvento(eventoId, nuevoEstado);
 
       if (resultado) {
-        // Actualizar lista de eventos
-        setEventos((prev) =>
-          prev.map((evento) =>
-            evento.id === eventoId
-              ? { ...evento, estado_tarea: nuevoEstado }
-              : evento
-          )
+        // Actualizar lista de eventos con el nuevo estado
+        const eventosActualizados = eventos.map((evento) =>
+          evento.id === eventoId
+            ? { ...evento, estado_tarea: nuevoEstado }
+            : evento
         );
+        
+        // Actualizar el estado local
+        setEventos(eventosActualizados);
+        
+        // Actualizar la fecha de recontacto basada en los eventos actualizados
+        await actualizarFechaRecontacto(eventosActualizados);
       } else {
         throw new Error("No se pudo actualizar el estado del evento");
       }

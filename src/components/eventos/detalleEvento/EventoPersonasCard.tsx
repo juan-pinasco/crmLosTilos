@@ -41,7 +41,7 @@ export const EventoPersonasCard: React.FC<EventoPersonasCardProps> = ({
         <div>
           <div className="flex items-center text-sm font-medium text-gray-500 mb-1">
             <User size={16} className="mr-2 text-gray-400" />
-            Cliente
+            Cliente *
           </div>
           {isEditing ? (
             <div className="relative">
@@ -51,8 +51,9 @@ export const EventoPersonasCard: React.FC<EventoPersonasCardProps> = ({
                   type="text"
                   value={busquedaCliente}
                   onChange={handleClienteSearch}
-                  placeholder="Buscar cliente..."
+                  placeholder="Buscar otro cliente..."
                   className="w-full px-2 py-1 outline-none"
+                  required
                 />
               </div>
               {clientesBuscados.length > 0 && (
@@ -69,7 +70,7 @@ export const EventoPersonasCard: React.FC<EventoPersonasCardProps> = ({
                 </div>
               )}
               {editForm.tarea_client_id && (
-                <div className="mt-2 text-sm text-gray-600">
+                <div className="mt-2 text-md font-medium text-blue-600">
                   Cliente seleccionado: {clientes.find(c => c.id === editForm.tarea_client_id)?.nombre || "Cliente"}
                 </div>
               )}
@@ -87,7 +88,7 @@ export const EventoPersonasCard: React.FC<EventoPersonasCardProps> = ({
         <div>
           <div className="flex items-center text-sm font-medium text-gray-500 mb-1">
             <User size={16} className="mr-2 text-gray-400" />
-            Vendedor
+            Vendedor *
           </div>
           {isEditing ? (
             <select
@@ -95,8 +96,8 @@ export const EventoPersonasCard: React.FC<EventoPersonasCardProps> = ({
               value={editForm.tarea_vendedor_id}
               onChange={handleInputChange}
               className="w-full border border-gray-300 rounded px-2 py-1"
+              required
             >
-              <option value="">Seleccionar vendedor</option>
               {vendedores.map(vendedor => (
                 <option key={vendedor.id} value={vendedor.id}>
                   {vendedor.nombre}

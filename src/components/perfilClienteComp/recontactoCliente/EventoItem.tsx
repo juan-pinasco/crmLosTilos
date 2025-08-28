@@ -37,17 +37,10 @@ export const EventoItem = ({
   return (
     <div 
       onClick={() => navigate(`/detalle-evento/${evento.id}`)}
-      className={`border rounded-lg p-4 cursor-pointer hover:shadow-md transition ${getEventoCardBgClass(evento.estado_tarea)}`}
+      className={`border rounded-lg p-4 cursor-pointer hover:shadow-md transition ${getEventoCardBgClass(evento.estado_tarea)} overflow-hidden`}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="font-semibold text-lg">{evento.titulo}</h3>
-          <div className="flex items-center text-sm text-gray-600 mt-1">
-            <Calendar size={14} className="mr-1" />
-            {formatearFecha(evento.fecha_realizacion)}
-          </div>
-        </div>
-        <div className="flex space-x-2">
+      <div className="flex flex-col justify-between items-start">
+        <div className="flex ml-auto space-x-2">
           {evento.estado_tarea !== 'Completado' && (
             <button
               onClick={(e) => { e.stopPropagation(); onCambiarEstado(evento.id, 'Completado'); }}
@@ -74,17 +67,24 @@ export const EventoItem = ({
             <Trash size={18} />
           </button>
         </div>
+        <div>
+          <h3 className="font-semibold text-lg">{`${evento.titulo.substring(0, 20)}...`}</h3>
+          <div className="flex items-center text-sm text-gray-600 mt-1">
+            <Calendar size={14} className="mr-1" />
+            {formatearFecha(evento.fecha_realizacion)}
+          </div>
+        </div>
       </div>
       
       {evento.descripcion && (
-        <p className="text-gray-600 mt-2 text-sm">{evento.descripcion}</p>
+        <p className="text-gray-600 mt-2 text-sm line-clamp-2 overflow-hidden">{evento.descripcion}</p>
       )}
       
-      <div className="mt-3 flex justify-between text-sm">
-        <span className="text-gray-600">
+      <div className="mt-3 flex flex-wrap justify-between text-sm">
+        <span className="text-gray-600 mb-2 truncate max-w-[90%]">
           Ejecutor: {evento.vendedor?.nombre || 'No asignado'}
         </span>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoClass(evento.estado_tarea)}`}>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ml-auto ${getEstadoClass(evento.estado_tarea)}`}>
           {evento.estado_tarea}
         </span>
       </div>
