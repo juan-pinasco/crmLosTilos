@@ -71,13 +71,14 @@ export const EventoForm = ({
 
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="tarea_vendedor_id">
-          Ejecutor de tarea
+          Ejecutor de tarea *
         </label>
         <select
           id="tarea_vendedor_id"
           name="tarea_vendedor_id"
           value={nuevoEvento.tarea_vendedor_id || ""}
           onChange={onInputChange}
+          required
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
           <option value="">Seleccionar ejecutor</option>
@@ -91,13 +92,14 @@ export const EventoForm = ({
       
       <div className="mb-4">
         <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="estado_tarea">
-          Estado
+          Estado *
         </label>
         <select
           id="estado_tarea"
           name="estado_tarea"
           value={nuevoEvento.estado_tarea}
           onChange={onInputChange}
+          required
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
         >
           {ESTADOS_TAREA.map((estado) => (
