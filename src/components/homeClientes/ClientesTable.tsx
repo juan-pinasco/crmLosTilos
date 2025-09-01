@@ -121,8 +121,12 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
   };
 
   const handleDeleteClient = async (id: string) => {
-    await deleteClient(id);
-    onClienteDeleted();
+    const resultado = await deleteClient(id);
+    if (resultado) {
+      onClienteDeleted();
+    }
+    // No necesitamos mostrar mensajes de error aquí porque
+    // la función deleteClient ya maneja las notificaciones con SweetAlert2
   };
 
   // Función para manejar la ordenación de la tabla

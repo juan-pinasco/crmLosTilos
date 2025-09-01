@@ -33,30 +33,7 @@ export const Home = () => {
         };
   });
 
-  // Maneja la limpieza de filtros y estados persistidos en localStorage
- /*  const handleLimpiarFiltros = () => {
-    const keysToRemove = [
-      "clientesHome_filtros",
-      "clientesTable_sortConfig",
-      "clientesTable_searchTerm",
-      "clientesTable_vendedorFilter",
-      "clientesTable_selectedColumns",
-      "clientesTable_dateFilters",
-    ];
-
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
-
-    // Restablecer los filtros locales
-    setFiltros({
-      tiposCliente: [],
-      estadosCliente: [],
-      temperaturasCliente: [],
-    });
-
-    // Recargar la página para garantizar que la tabla también se reinicie
-    window.location.reload();
-  }; */
-
+ 
   useEffect(() => {
     const cargarDatos = async () => {
       setLoading(true);

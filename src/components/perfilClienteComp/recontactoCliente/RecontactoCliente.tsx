@@ -14,6 +14,7 @@ import { EventosList } from "./EventosList";
 import { EventoModal } from "./EventoModal";
 import { ESTADO_TAREA_DEFAULT } from "../../../constants/estadosTareas";
 import { updateFechaRecontacto } from "../../../data/ClientsCrud";
+import Swal from "sweetalert2";
 
 interface RecontactoClienteProps {
   clienteId: string;
@@ -198,7 +199,19 @@ export const RecontactoCliente = ({
   };
 
   const handleEliminarEvento = async (eventoId: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar este evento?")) return;
+    // Usar SweetAlert2 en lugar de confirm()
+    const result = await Swal.fire({
+      title: "¿Eliminar evento?",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar"
+    });
+    
+    if (!result.isConfirmed) return;
 
     try {
       await eliminarEvento(eventoId);
@@ -211,13 +224,70 @@ export const RecontactoCliente = ({
 
       // Actualizar fecha de recontacto
       actualizarFechaRecontacto(eventosActualizados);
+      
+      // Mostrar mensaje de éxito
+      Swal.fire({
+        icon: "success",
+        title: "Evento eliminado",
+        text: "El evento ha sido eliminado correctamente",
+        timer: 2000
+      });
     } catch (err) {
       console.error("Error al eliminar evento:", err);
       setError("Error al eliminar el evento");
+      
+      // Mostrar mensaje de error
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo eliminar el evento"
+      });
     }
   };
 
   const handleCambiarEstado = async (eventoId: string, nuevoEstado: string) => {
+    // Encontrar el evento actual para mostrar información relevante
+    const eventoActual = eventos.find(evento => evento.id === eventoId);
+    if (!eventoActual) return;
+    
+    // Determinar el mensaje según el estado al que se va a cambiar
+    let confirmTitle = "";
+    let confirmText = "";
+    let confirmIcon = "question";
+    
+    if (nuevoEstado === "Completado") {
+      confirmTitle = "¿Marcar como completada?";
+      confirmText = `¿Desea marcar la tarea como completada?`;
+      confirmIcon = "success";
+    } else if (nuevoEstado === "Pendiente") {
+      confirmTitle = "¿Cambiar a pendiente?";
+      confirmText = `¿Desea pasar la tarea a pendiente?`;
+      confirmIcon = "warning";
+    } else {
+      // Si es otro estado, no mostrar confirmación
+      await procesarCambioEstado(eventoId, nuevoEstado);
+      return;
+    }
+    
+    // Mostrar confirmación con SweetAlert2
+    const result = await Swal.fire({
+      title: confirmTitle,
+      text: confirmText,
+      icon: confirmIcon as any,
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, confirmar",
+      cancelButtonText: "Cancelar"
+    });
+    
+    if (result.isConfirmed) {
+      await procesarCambioEstado(eventoId, nuevoEstado);
+    }
+  };
+  
+  // Función auxiliar para procesar el cambio de estado
+  const procesarCambioEstado = async (eventoId: string, nuevoEstado: string) => {
     try {
       const resultado = await actualizarEstadoEvento(eventoId, nuevoEstado);
 
@@ -234,12 +304,26 @@ export const RecontactoCliente = ({
         
         // Actualizar la fecha de recontacto basada en los eventos actualizados
         await actualizarFechaRecontacto(eventosActualizados);
+        
+        // Mostrar mensaje de éxito
+        Swal.fire({
+          icon: "success",
+          title: "Estado actualizado",
+          timer: 2000
+        });
       } else {
         throw new Error("No se pudo actualizar el estado del evento");
       }
     } catch (err) {
       console.error("Error al actualizar estado:", err);
       setError("Error al actualizar el estado del evento");
+      
+      // Mostrar mensaje de error
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo actualizar el estado de la tarea"
+      });
     }
   };
 
@@ -263,7 +347,7 @@ export const RecontactoCliente = ({
           className="cursor-pointer bg-blue-400 hover:bg-blue-500 text-white font-medium py-2 px-2 rounded-md flex items-center"
         >
           <Plus size={20} />
-          Tarea
+          Agregar
         </button>
       </div>
 

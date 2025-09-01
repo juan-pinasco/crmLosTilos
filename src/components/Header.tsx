@@ -140,6 +140,17 @@ export const Header = () => {
                   </span>
                 )}
               </a>
+              <a 
+                href="/observaciones" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.href = '/observaciones';
+                }}
+                className={`py-2 px-3 font-medium relative ${isActive('/observaciones')}`}
+              >
+                Observaciones
+              </a>
             </nav>
           )}
           
