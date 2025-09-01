@@ -156,7 +156,13 @@ export const CreateEvento = () => {
       console.log("Fecha y hora local ingresada:", fechaHoraLocal);
       console.log("Guardando evento con fecha UTC:", fechaUTC);
       await crearEvento(eventoData);
-      navigate("/eventos");
+      
+      // Navegar al perfil del cliente si hay un cliente seleccionado, o a la página de eventos si no
+      if (formData.tarea_client_id) {
+        navigate(`/profile-client/${formData.tarea_client_id}`);
+      } else {
+        navigate("/eventos");
+      }
     } catch (error) {
       console.error("Error al crear el evento:", error);
       alert("Error al crear el evento. Por favor, inténtalo de nuevo.");

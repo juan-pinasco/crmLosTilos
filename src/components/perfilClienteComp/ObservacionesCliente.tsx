@@ -2,14 +2,15 @@ import { useState } from "react";
 import { Trash } from "lucide-react";
 import type { Observacion } from "../../types/ObservationsType";
 import type { Cliente } from "../../types/ClientsType";
-import { 
-  fetchObservacionesByClienteId, 
-  createObservacion, 
-  deleteObservacion 
+import {
+  fetchObservacionesByClienteId,
+  createObservacion,
+  deleteObservacion,
 } from "../../data/ObservacionesCrud";
 import { updateUltimaInteraccion } from "../../data/ClientsCrud";
 import { formatearFecha } from "../../utils/dateUtils";
 import { supabase } from "../../integrations/supabase";
+import Swal from "sweetalert2";
 
 interface ObservacionesClienteProps {
   clienteId: string;
@@ -19,15 +20,16 @@ interface ObservacionesClienteProps {
   setObservaciones: React.Dispatch<React.SetStateAction<Observacion[]>>;
 }
 
-export const ObservacionesCliente = ({ 
-  clienteId, 
-  cliente, 
-  setCliente, 
-  observaciones, 
-  setObservaciones 
+export const ObservacionesCliente = ({
+  clienteId,
+  cliente,
+  setCliente,
+  observaciones,
+  setObservaciones,
 }: ObservacionesClienteProps) => {
   const [nuevaNota, setNuevaNota] = useState<string>("");
-  const [loadingObservaciones, setLoadingObservaciones] = useState<boolean>(false);
+  const [loadingObservaciones, setLoadingObservaciones] =
+    useState<boolean>(false);
 
   // Función para mostrar texto vacío en gris claro
   const vacio = () => <span className="text-gray-400">Sin datos</span>;
@@ -39,143 +41,206 @@ export const ObservacionesCliente = ({
   };
 
   const handleAgregarNota = async () => {
-    console.log("Iniciando handleAgregarNota", {
-      nuevaNota: nuevaNota.trim(),
-      clienteId,
-    });
     if (nuevaNota.trim() && clienteId) {
-      setLoadingObservaciones(true);
+      // Mostrar alerta de confirmación antes de agregar la observación
+      Swal.fire({
+        title: "¿Confirmar observación?",
+        text: "¿Deseas agregar esta observación?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: "#10B981", // Verde para confirmar
+        cancelButtonColor: "#6B7280", // Gris para cancelar
+        confirmButtonText: "Sí, agregar",
+        cancelButtonText: "Cancelar",
+      }).then(async (result) => {
+        // Si el usuario confirma, procedemos con la adición de la observación
+        if (result.isConfirmed) {
+          setLoadingObservaciones(true);
 
-      try {
-        // Obtener el usuario actual para el id_vendedor
-        const user = await getCurrentUser();
-        console.log("Usuario actual:", user);
+          try {
+            // Obtener el usuario actual para el id_vendedor
+            const user = await getCurrentUser();
 
-        // Verificar si el cliente existe en la base de datos
-        if (!cliente) {
-          throw new Error("Cliente no encontrado");
-        }
+            // Verificar si el cliente existe en la base de datos
+            if (!cliente) {
+              throw new Error("Cliente no encontrado");
+            }
 
-        // Crear nueva observación
-        // Asegurarse de que id_cliente sea un UUID válido
-        const nuevaObservacion: Observacion = {
-          id_cliente: clienteId, // Este debe ser un UUID válido
-          id_vendedor: user?.email || "", // Usar el email del usuario en sesión actual
-          observacion: nuevaNota.trim(),
-        };
-        console.log("Nueva observación a crear:", nuevaObservacion);
+            // Crear nueva observación
+            const nuevaObservacion: Observacion = {
+              id_cliente: clienteId,
+              id_vendedor: user?.email || "",
+              observacion: nuevaNota.trim(),
+            };
 
-        const resultado = await createObservacion(nuevaObservacion);
-        console.log("Resultado de createObservacion:", resultado);
+            const resultado = await createObservacion(nuevaObservacion);
 
-        // Si la creación fue exitosa, recargar las observaciones
-        if (resultado && resultado.length > 0) {
-          console.log("Recargando observaciones para cliente ID:", clienteId);
-          const observacionesActualizadas = await fetchObservacionesByClienteId(
-            clienteId
-          );
-          console.log("Observaciones actualizadas:", observacionesActualizadas);
-          setObservaciones(observacionesActualizadas);
+            // Si la creación fue exitosa, recargar las observaciones
+            if (resultado && resultado.length > 0) {
+              const observacionesActualizadas =
+                await fetchObservacionesByClienteId(clienteId);
+              setObservaciones(observacionesActualizadas);
 
-          // Actualizar la fecha de última interacción del cliente con la fecha de la nueva observación
-          const nuevaObservacionCreada = resultado[0];
-          if (nuevaObservacionCreada && nuevaObservacionCreada.created_at) {
-            console.log(
-              "Actualizando última interacción del cliente con la fecha:",
-              nuevaObservacionCreada.created_at
-            );
+              // Actualizar la fecha de última interacción del cliente
+              const nuevaObservacionCreada = resultado[0];
+              if (nuevaObservacionCreada && nuevaObservacionCreada.created_at) {
+                // Actualizar en la base de datos
+                await updateUltimaInteraccion(
+                  clienteId,
+                  nuevaObservacionCreada.created_at
+                );
 
-            // Actualizar en la base de datos
-            await updateUltimaInteraccion(
-              clienteId,
-              nuevaObservacionCreada.created_at
-            );
+                // Actualizar en el estado local
+                if (cliente) {
+                  setCliente({
+                    ...cliente,
+                    ultima_interaccion: nuevaObservacionCreada.created_at,
+                  });
+                }
+              }
 
-            // Actualizar en el estado local
-            if (cliente) {
-              setCliente({
-                ...cliente,
-                ultima_interaccion: nuevaObservacionCreada.created_at,
+              // Limpiar el campo de texto
+              setNuevaNota("");
+
+              // Mostrar alerta de éxito
+              Swal.fire({
+                icon: "success",
+                title: "¡Observación agregada!",
+                text: "La observación ha sido guardada correctamente",
+                confirmButtonColor: "#10B981",
+                timer: 2000,
+                timerProgressBar: true,
+              });
+            } else {
+              Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se pudo crear la observación",
+                confirmButtonColor: "#EF4444",
               });
             }
+          } catch (error) {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "Ocurrió un error al agregar la observación",
+              confirmButtonColor: "#EF4444",
+            });
+          } finally {
+            setLoadingObservaciones(false);
           }
-
-          // Limpiar el campo de texto
-          setNuevaNota("");
-        } else {
-          console.error("No se pudo crear la observación");
         }
-      } catch (error) {
-        console.error("Error al agregar la observación:", error);
-      } finally {
-        setLoadingObservaciones(false);
-      }
-    } else {
-      console.log(
-        "No se puede agregar nota: texto vacío o ID de cliente no disponible"
-      );
+      });
     }
   };
 
   // Función para borrar una observación
+  // Función para borrar una observación
   const handleBorrarObservacion = async (observacionId: number) => {
     if (!clienteId) return;
 
-    try {
-      setLoadingObservaciones(true);
-      console.log(`Borrando observación con ID: ${observacionId}`);
+    // Mostrar alerta de confirmación antes de borrar
+    Swal.fire({
+      title: "¿Eliminar observación?",
+      text: "¿Estás seguro de que deseas eliminar esta observación? Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#EF4444", // Rojo para confirmar eliminación
+      cancelButtonColor: "#6B7280", // Gris para cancelar
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      // Si el usuario confirma, procedemos con la eliminación
+      if (result.isConfirmed) {
+        try {
+          setLoadingObservaciones(true);
 
-      // Borrar la observación
-      const resultado = await deleteObservacion(observacionId);
+          // Borrar la observación
+          const resultado = await deleteObservacion(observacionId);
 
-      if (resultado) {
-        // Recargar las observaciones
-        const observacionesActualizadas = await fetchObservacionesByClienteId(
-          clienteId
-        );
-        setObservaciones(observacionesActualizadas);
+          if (resultado) {
+            // Recargar las observaciones
+            const observacionesActualizadas =
+              await fetchObservacionesByClienteId(clienteId);
+            setObservaciones(observacionesActualizadas);
 
-        // Actualizar la fecha de última interacción
-        if (observacionesActualizadas && observacionesActualizadas.length > 0) {
-          // Si aún quedan observaciones, usar la fecha de la más reciente
-          const observacionesOrdenadas = [...observacionesActualizadas].sort(
-            (a, b) =>
-              new Date(b.created_at || "").getTime() -
-              new Date(a.created_at || "").getTime()
-          );
+            // Actualizar la fecha de última interacción
+            if (
+              observacionesActualizadas &&
+              observacionesActualizadas.length > 0
+            ) {
+              // Si aún quedan observaciones, usar la fecha de la más reciente
+              const observacionesOrdenadas = [
+                ...observacionesActualizadas,
+              ].sort(
+                (a, b) =>
+                  new Date(b.created_at || "").getTime() -
+                  new Date(a.created_at || "").getTime()
+              );
 
-          const ultimaObservacion = observacionesOrdenadas[0];
-          if (ultimaObservacion && ultimaObservacion.created_at && cliente) {
-            // Actualizar la fecha de última interacción en la base de datos
-            await updateUltimaInteraccion(clienteId, ultimaObservacion.created_at);
+              const ultimaObservacion = observacionesOrdenadas[0];
+              if (
+                ultimaObservacion &&
+                ultimaObservacion.created_at &&
+                cliente
+              ) {
+                // Actualizar la fecha de última interacción en la base de datos
+                await updateUltimaInteraccion(
+                  clienteId,
+                  ultimaObservacion.created_at
+                );
 
-            // Actualizar el cliente en el estado local
-            setCliente({
-              ...cliente,
-              ultima_interaccion: ultimaObservacion.created_at,
+                // Actualizar el cliente en el estado local
+                setCliente({
+                  ...cliente,
+                  ultima_interaccion: ultimaObservacion.created_at,
+                });
+              }
+            } else if (cliente) {
+              // Si no quedan observaciones, usar la fecha de creación como última interacción
+              if (cliente.created_at) {
+                // Actualizar la fecha de última interacción en la base de datos
+                await updateUltimaInteraccion(clienteId, cliente.created_at);
+
+                // Actualizar el cliente en el estado local
+                setCliente({
+                  ...cliente,
+                  ultima_interaccion: cliente.created_at,
+                });
+              }
+            }
+
+            // Mostrar alerta de éxito
+            Swal.fire({
+              icon: "success",
+              title: "Observación eliminada",
+              text: "La observación ha sido eliminada correctamente",
+              confirmButtonColor: "#10B981",
+              timer: 2000,
+              timerProgressBar: true,
+            });
+          } else {
+            // Mostrar alerta de error
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "No se pudo eliminar la observación",
+              confirmButtonColor: "#EF4444",
             });
           }
-        } else if (cliente) {
-          // Si no quedan observaciones, usar la fecha de creación como última interacción
-          if (cliente.created_at) {
-            // Actualizar la fecha de última interacción en la base de datos
-            await updateUltimaInteraccion(clienteId, cliente.created_at);
-
-            // Actualizar el cliente en el estado local
-            setCliente({
-              ...cliente,
-              ultima_interaccion: cliente.created_at,
-            });
-          }
+        } catch (error) {
+          // Mostrar alerta de error
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: "Ocurrió un error al eliminar la observación",
+            confirmButtonColor: "#EF4444",
+          });
+        } finally {
+          setLoadingObservaciones(false);
         }
-      } else {
-        console.error("No se pudo borrar la observación");
       }
-    } catch (error) {
-      console.error("Error al borrar la observación:", error);
-    } finally {
-      setLoadingObservaciones(false);
-    }
+    });
   };
 
   return (
@@ -247,13 +312,7 @@ export const ObservacionesCliente = ({
         className="cursor-pointer mt-1 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-md flex items-center justify-center w-full"
         disabled={loadingObservaciones || !nuevaNota.trim()}
       >
-        {loadingObservaciones ? (
-          "Guardando..."
-        ) : (
-          <>
-            Agregar Observacion
-          </>
-        )}
+        {loadingObservaciones ? "Guardando..." : <>Agregar Observacion</>}
       </button>
     </div>
   );

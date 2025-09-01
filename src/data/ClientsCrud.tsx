@@ -1,5 +1,6 @@
 import { supabase } from "../integrations/supabase";
 import type { Cliente } from "../types/ClientsType";
+import Swal from "sweetalert2";
 
 export const fetchClientes = async () => {
   try {
@@ -52,16 +53,91 @@ export const fetchClientes = async () => {
   }
 };
 
-export const deleteClient = async (id: string) => {
-  try {
-    const { error } = await supabase.from("clientes").delete().eq("id", id);
+export const deleteClient = async (id: string): Promise<boolean> => {
+  return new Promise((resolve) => {
+    Swal.fire({
+      title: "¿Eliminar cliente?",
+      text: "Esta acción no se puede deshacer",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          console.log(`Intentando eliminar cliente con ID: ${id}`);
+          
+          // Verificar si el cliente existe antes de intentar eliminarlo
+          const { data: clienteExistente, error: errorConsulta } = await supabase
+            .from("clientes")
+            .select("id")
+            .eq("id", id)
+            .single();
+          
+          if (errorConsulta) {
+            console.error("Error al verificar si el cliente existe:", errorConsulta);
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "No se pudo verificar si el cliente existe"
+            });
+            resolve(false);
+            return;
+          }
+          
+          if (!clienteExistente) {
+            console.error(`No se encontró ningún cliente con ID: ${id}`);
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "No se encontró el cliente a eliminar"
+            });
+            resolve(false);
+            return;
+          }
+          
+          // Intentar eliminar el cliente
+          const { error } = await supabase
+            .from("clientes")
+            .delete()
+            .eq("id", id);
 
-    if (error) {
-      throw error;
-    }
-  } catch (error) {
-    console.error("Error al eliminar el cliente:", error);
-  }
+          if (error) {
+            console.error("Error al eliminar el cliente:", error);
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: "No se pudo eliminar el cliente: Ya que tiene observaciones o tareas asociadas. Elimine primero las TAREAS y OBSERVACIONES actuales del cliente para poder eliminarlo."
+            });
+            resolve(false);
+            return;
+          }
+          
+          console.log(`Cliente con ID: ${id} eliminado correctamente`);
+          Swal.fire({
+            icon: "success",
+            title: "Cliente eliminado",
+            text: "El cliente ha sido eliminado correctamente",
+            timer: 2000
+          });
+          resolve(true);
+        } catch (error) {
+          console.error("Error inesperado al eliminar el cliente:", error);
+          Swal.fire({
+            icon: "error",
+            title: "Error inesperado",
+            text: "Ocurrió un error al eliminar el cliente"
+          });
+          resolve(false);
+        }
+      } else {
+        // El usuario canceló la eliminación
+        resolve(false);
+      }
+    });
+  });
 };
 
 export const create = async (cliente: Cliente) => {

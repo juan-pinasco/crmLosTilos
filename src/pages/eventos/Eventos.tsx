@@ -8,6 +8,7 @@ import { fetchEventos, eliminarEvento } from "../../data/EventosCrud";
 import { fetchVendedores } from "../../data/VendedoresCrud";
 import { fetchClientes } from "../../data/ClientsCrud";
 import { EventosTable } from "../../components/eventos/eventosTable/EventosTable";
+import Swal from "sweetalert2";
 
 export const Eventos = () => {
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -76,13 +77,70 @@ export const Eventos = () => {
 
   // Función para manejar la eliminación de un evento
   const handleDeleteEvento = async (id: string) => {
-    setLoading(true);
-    await eliminarEvento(id);
-    const nuevosEventos = await fetchEventos();
-    if (nuevosEventos) {
-      setEventos(nuevosEventos);
+    // Buscar el evento para obtener el ID del cliente antes de eliminarlo
+    const eventoAEliminar = eventos.find(evento => evento.id === id);
+    const clienteId = eventoAEliminar?.tarea_client_id || null;
+
+    // Mostrar confirmación antes de eliminar
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'No podrás recuperar esta tarea una vez eliminada',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    // Si el usuario cancela, no hacer nada
+    if (!result.isConfirmed) {
+      return;
     }
-    setLoading(false);
+
+    setLoading(true);
+    try {
+      const eliminado = await eliminarEvento(id);
+      
+      if (eliminado) {
+        // Mostrar mensaje de éxito
+        Swal.fire({
+          title: 'Eliminado',
+          text: 'La tarea ha sido eliminada correctamente',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        
+        // Si hay un cliente asociado, navegar a su perfil
+        if (clienteId) {
+          navigate(`/profile-client/${clienteId}`);
+          return; // Importante: salir de la función para evitar actualizar la lista de eventos
+        }
+        
+        // Actualizar la lista de eventos solo si no navegamos a otra página
+        const nuevosEventos = await fetchEventos();
+        if (nuevosEventos) {
+          setEventos(nuevosEventos);
+        }
+      } else {
+        // Mostrar mensaje de error
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo eliminar la tarea',
+          icon: 'error'
+        });
+      }
+    } catch (error) {
+      console.error('Error al eliminar evento:', error);
+      Swal.fire({
+        title: 'Error',
+        text: 'Ocurrió un error al intentar eliminar la tarea',
+        icon: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // La función getEstadoClass ahora se importa desde constants/estadosTareas.ts

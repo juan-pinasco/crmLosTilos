@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { Header } from "../../components/Header";
 import type { Evento } from "../../types/EventsType";
 import { fetchEventoPorId, actualizarEvento } from "../../data/EventosCrud";
@@ -17,6 +17,7 @@ import {
 
 export const DetalleEvento = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [evento, setEvento] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,6 +151,13 @@ export const DetalleEvento = () => {
       if (eventoActualizado) {
         setEvento(eventoActualizado);
         setIsEditing(false);
+      }
+      
+      // Navegar al perfil del cliente si hay un cliente seleccionado, o a la página de eventos si no
+      if (editForm.tarea_client_id) {
+        navigate(`/profile-client/${editForm.tarea_client_id}`);
+      } else {
+        navigate("/eventos");
       }
     } catch (err) {
       console.error("Error al actualizar el evento:", err);
