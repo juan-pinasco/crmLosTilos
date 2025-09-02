@@ -4,9 +4,11 @@ import { clearOnLogout } from '../utils/storageManager';
 import { supabase } from '../integrations/supabase';
 import { GetSession } from '../data/AuthsCrud';
 import { useLocation, useNavigate } from 'react-router';
+import { fetchVendedorByAuthId } from '../data/VendedoresCrud';
 
 export const Header = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [vendedorNombre, setVendedorNombre] = useState<string | null>(null);
   const [pendingTasks, setPendingTasks] = useState<number>(0);
 
   useEffect(() => {
@@ -15,6 +17,11 @@ export const Header = () => {
       const session = await GetSession();
       if (session) {
         setUserEmail(session.email || null);
+        // Buscar el vendedor asociado al usuario
+        const vendedor = await fetchVendedorByAuthId(session.id);
+        if (vendedor) {
+          setVendedorNombre(vendedor.nombre);
+        }
       }
     };
 
@@ -22,8 +29,18 @@ export const Header = () => {
 
     // Suscribirse a cambios en el estado de autenticación
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setUserEmail(session?.user.email || null);
+        if (session?.user) {
+          const vendedor = await fetchVendedorByAuthId(session.user.id);
+          if (vendedor) {
+            setVendedorNombre(vendedor.nombre);
+          } else {
+            setVendedorNombre(null);
+          }
+        } else {
+          setVendedorNombre(null);
+        }
       }
     );
 
@@ -151,13 +168,24 @@ export const Header = () => {
               >
                 Observaciones
               </a>
+              <a 
+                href="/userProfile" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.href = '/userProfile';
+                }}
+                className={`py-2 px-3 font-medium relative ${isActive('/userProfile')}`}
+              >
+                Perfil
+              </a>
             </nav>
           )}
           
           {/* Email y botón de cerrar sesión a la derecha */}
           {userEmail && (
             <div className="flex items-center gap-4">
-              <span className="text-gray-700">{userEmail}</span>
+              <span className="text-gray-700">{vendedorNombre || userEmail}</span>
               <button
                 onClick={handleSignOut}
                 className="cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
