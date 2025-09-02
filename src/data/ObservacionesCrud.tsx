@@ -1,11 +1,39 @@
 import { supabase } from "../integrations/supabase";
 import type { Observacion } from "../types/ObservationsType";
 
+// Obtener todas las observaciones
+export const fetchObservaciones = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("observaciones_cliente")
+      .select(`
+        id,
+        created_at,
+        id_cliente,
+        id_vendedor,
+        observacion
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error de Supabase al obtener observaciones:", error);
+      throw error;
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error al obtener las observaciones:", error);
+    return [];
+  }
+};
+
 // Obtener todas las observaciones de un cliente
 export const fetchObservacionesByClienteId = async (clienteId: string) => {
   try {
     console.log("Buscando observaciones para cliente ID:", clienteId);
-    const { data, error } = await supabase
+    
+    // Primero obtenemos las observaciones
+    const { data: observaciones, error } = await supabase
       .from("observaciones_cliente")
       .select(`
         id,
@@ -22,8 +50,53 @@ export const fetchObservacionesByClienteId = async (clienteId: string) => {
       throw error;
     }
 
-    console.log("Observaciones encontradas:", data);
-    return data || [];
+    // Si no hay observaciones, retornamos un array vacío
+    if (!observaciones || observaciones.length === 0) {
+      return [];
+    }
+
+    // Obtenemos los IDs únicos de vendedores
+    const vendedorIds = observaciones
+      .map(obs => obs.id_vendedor)
+      .filter(id => id !== null && id !== undefined);
+    
+    // Si no hay vendedores, retornamos las observaciones sin nombres de vendedor
+    if (vendedorIds.length === 0) {
+      return observaciones.map(obs => ({
+        ...obs,
+        nombre_vendedor: null
+      }));
+    }
+
+    // Obtenemos los datos de los vendedores
+    const { data: vendedores, error: vendedoresError } = await supabase
+      .from("vendedores")
+      .select("id, nombre")
+      .in("id", vendedorIds);
+
+    if (vendedoresError) {
+      console.error("Error al obtener vendedores:", vendedoresError);
+      // Si hay error, retornamos las observaciones sin nombres de vendedor
+      return observaciones.map(obs => ({
+        ...obs,
+        nombre_vendedor: null
+      }));
+    }
+
+    // Creamos un mapa de id -> nombre para los vendedores
+    const vendedoresMap = vendedores.reduce<Record<string, string>>((map, vendedor) => {
+      map[vendedor.id] = vendedor.nombre;
+      return map;
+    }, {});
+
+    // Combinamos los datos
+    const observacionesConNombreVendedor = observaciones.map(obs => ({
+      ...obs,
+      nombre_vendedor: obs.id_vendedor ? vendedoresMap[obs.id_vendedor] || null : null
+    }));
+
+    console.log("Observaciones encontradas:", observacionesConNombreVendedor);
+    return observacionesConNombreVendedor;
   } catch (error) {
     console.error("Error al obtener las observaciones del cliente:", error);
     return [];

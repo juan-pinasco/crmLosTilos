@@ -9,6 +9,7 @@ import { CreateEvento } from "../pages/eventos/CreateEvento";
 import { CalendarioEventos } from "../pages/eventos/CalendarioEventos";
 import { DetalleEvento } from "../pages/eventos/DetalleEvento";
 import { Observaciones } from "../pages/observaciones";
+import { UserProfile } from "../pages/UserProfile";
 
 export const AppRouters = () => {
     return(
@@ -26,6 +27,7 @@ export const AppRouters = () => {
                 <Route path="/calendario-eventos" element={<CalendarioEventos />} />
                 <Route path="/detalle-evento/:id" element={<DetalleEvento />} />
                 <Route path="/observaciones" element={<Observaciones />} />
+                <Route path="/userProfile" element={<UserProfile/>} />
                 {/* Aquí puedes añadir más rutas protegidas */}
             </Route>
             

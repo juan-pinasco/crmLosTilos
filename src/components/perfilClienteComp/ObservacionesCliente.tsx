@@ -40,6 +40,27 @@ export const ObservacionesCliente = ({
     return data?.user;
   };
 
+  // Función para obtener el ID del vendedor a partir del email
+  const getVendedorIdByEmail = async (email: string): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("vendedores")
+        .select("id")
+        .eq("email", email)
+        .single();
+
+      if (error) {
+        console.error("Error al obtener el vendedor por email:", error);
+        return null;
+      }
+
+      return data?.id || null;
+    } catch (error) {
+      console.error("Error al buscar el vendedor:", error);
+      return null;
+    }
+  };
+
   const handleAgregarNota = async () => {
     if (nuevaNota.trim() && clienteId) {
       // Mostrar alerta de confirmación antes de agregar la observación
@@ -66,10 +87,19 @@ export const ObservacionesCliente = ({
               throw new Error("Cliente no encontrado");
             }
 
+            let vendedorId = null;
+            if (user?.email) {
+              vendedorId = await getVendedorIdByEmail(user.email);
+            }
+
+            if (!vendedorId) {
+              console.warn("No se pudo obtener el ID del vendedor");
+            }
+
             // Crear nueva observación
             const nuevaObservacion: Observacion = {
               id_cliente: clienteId,
-              id_vendedor: user?.email || "",
+              id_vendedor: vendedorId || null,
               observacion: nuevaNota.trim(),
             };
 
@@ -268,10 +298,10 @@ export const ObservacionesCliente = ({
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center space-x-2 mb-3">
-                  <p className="font-medium text-gray-700">Vendedor:</p>
+                  <p className="font-medium text-gray-700">Creador nota:</p>
                   <p className="text-sm text-gray-500">
-                    {observacion.id_vendedor
-                      ? observacion.id_vendedor
+                    {observacion.nombre_vendedor
+                      ? observacion.nombre_vendedor
                       : vacio()}
                   </p>
                 </div>
