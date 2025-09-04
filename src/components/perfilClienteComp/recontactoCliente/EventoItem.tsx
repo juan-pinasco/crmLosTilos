@@ -41,8 +41,8 @@ export const EventoItem = ({
         evento.estado_tarea
       )} overflow-hidden`}
     >
-      <div className="flex flex-col justify-between items-start">
-        <div className="flex items-start">
+      <div className="flex flex-col justify-between">
+        <div className="flex">
           <h3 className="font-semibold text-lg overflow-hidden line-clamp-2 flex-1 pr-1">
             {evento.titulo
               ? `${evento.titulo.charAt(0).toUpperCase()}${evento.titulo
@@ -50,7 +50,7 @@ export const EventoItem = ({
                   .toLowerCase()}`
               : "Sin título"}
           </h3>
-          <div className="flex space-x-2 shrink-0 pt-0.5">
+          <div className="flex space-x-2 align-start">
             {evento.estado_tarea !== "Completado" && (
               <button
                 onClick={(e) => {

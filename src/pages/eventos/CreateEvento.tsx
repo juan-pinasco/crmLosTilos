@@ -338,7 +338,7 @@ export const CreateEvento = () => {
                 {/* Ejecutor */}
                 <div>
                   <label htmlFor="tarea_vendedor_id" className="block text-sm font-medium text-gray-700 mb-1">
-                    Ejecutor *
+                    Vendedor Ejecutor *
                   </label>
                   <select
                     id="tarea_vendedor_id"

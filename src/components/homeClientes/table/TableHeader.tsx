@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowUpDown, ArrowUp, ArrowDown, CalendarRange } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, CalendarRange, Bookmark } from "lucide-react";
 
 interface TableHeaderProps {
   availableColumns: { key: string; label: string }[];
@@ -61,6 +61,13 @@ const TableHeader: React.FC<TableHeaderProps> = ({
   return (
     <thead className="bg-gray-50 sticky top-0 z-10">
       <tr>
+        {/* Columna para el marcador de fila */}
+        <th
+          scope="col"
+          className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+        >
+          <Bookmark size={16} />
+        </th>
         {availableColumns.map(
           (column) =>
             selectedColumns[column.key] && (

@@ -120,8 +120,11 @@ export const createObservacion = async (observacion: Observacion) => {
     }
     
     // Asegurarse de que los tipos sean correctos
+    // Extraemos nombre_vendedor para no enviarlo a la base de datos
+    const { nombre_vendedor, ...observacionSinNombre } = observacion;
+    
     const nuevaObservacion = {
-      ...observacion,
+      ...observacionSinNombre,
       // Asegurarse de que id_cliente sea un string (UUID)
       id_cliente: String(observacion.id_cliente),
       // Si id_vendedor es null o undefined, dejarlo así, de lo contrario convertirlo a string

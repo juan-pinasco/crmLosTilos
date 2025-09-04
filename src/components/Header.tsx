@@ -5,6 +5,7 @@ import { supabase } from '../integrations/supabase';
 import { GetSession } from '../data/AuthsCrud';
 import { useLocation, useNavigate } from 'react-router';
 import { fetchVendedorByAuthId } from '../data/VendedoresCrud';
+import Swal from 'sweetalert2';
 
 export const Header = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -95,13 +96,28 @@ export const Header = () => {
 
   const handleSignOut = async () => {
     try {
-            // Limpiar localStorage de forma centralizada y notificar a la aplicación
-      await clearOnLogout();
+      // Mostrar confirmación con SweetAlert2
+      const result = await Swal.fire({
+        title: '¿Cerrar sesión?',
+        text: '¿Estás seguro que deseas cerrar sesión?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, cerrar sesión',
+        cancelButtonText: 'Cancelar'
+      });
       
-      // Cerrar sesión en Supabase
-      await supabase.auth.signOut();
-      
-      console.log('Se ha cerrado sesión y se han limpiado los filtros del localStorage');
+      // Si el usuario confirma, cerrar sesión
+      if (result.isConfirmed) {
+        // Limpiar localStorage de forma centralizada y notificar a la aplicación
+        await clearOnLogout();
+        
+        // Cerrar sesión en Supabase
+        await supabase.auth.signOut();
+        
+        console.log('Se ha cerrado sesión y se han limpiado los filtros del localStorage');
+      }
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
     }

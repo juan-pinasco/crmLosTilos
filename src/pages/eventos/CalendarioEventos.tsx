@@ -183,7 +183,7 @@ export const CalendarioEventos = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por Vendedores
+                Filtrar por Vendedores Ejecutores
               </label>
               <div className="max-h-40 overflow-y-auto p-2 border border-gray-300 rounded-md">
                 {vendedores.length > 0 ? (
