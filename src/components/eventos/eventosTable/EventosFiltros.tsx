@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useRef } from "react";
 import type { Vendedor } from "../../../types/SellersType";
 import { ESTADOS_TAREA, ESTADO_TAREA_COLORS } from "../../../constants/estadosTareas";
-import { Search, ChevronDown, Calendar, RotateCcw } from "lucide-react";
+import { Search, ChevronDown, RotateCcw } from "lucide-react";
 import { formatearFecha } from "../../../utils/dateUtils";
 
 interface EventosFiltrosProps {
@@ -76,6 +76,23 @@ const EventosFiltros: React.FC<EventosFiltrosProps> = ({
     setSearchTerm(e.target.value);
   };
 
+  // Referencias para los inputs de fecha
+  const fechaDesdeRef = useRef<HTMLInputElement>(null);
+  const fechaHastaRef = useRef<HTMLInputElement>(null);
+
+  // Funciones para abrir el calendario al hacer clic en el campo
+  const abrirCalendarioDesde = () => {
+    if (fechaDesdeRef.current) {
+      fechaDesdeRef.current.showPicker();
+    }
+  };
+
+  const abrirCalendarioHasta = () => {
+    if (fechaHastaRef.current) {
+      fechaHastaRef.current.showPicker();
+    }
+  };
+
   // Función para obtener la clase de color para el checkbox
   const getCheckboxClass = (estado: string) => {
     const colorClass = ESTADO_TAREA_COLORS[estado.toLowerCase()] || ESTADO_TAREA_COLORS.default;
@@ -129,22 +146,24 @@ const EventosFiltros: React.FC<EventosFiltrosProps> = ({
         <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
           {/* Fechas */}
           <div className="cursor-pointer border border-gray-300 rounded-md flex items-center space-x-2 flex-shrink-0">
-            <div className="pl-2 text-gray-400">
-              <Calendar size={16} />
-            </div>
+            
             <input
+              ref={fechaDesdeRef}
               type="date"
               value={fechaDesde}
               onChange={handleFechaDesdeChange}
+              onClick={abrirCalendarioDesde}
               placeholder="Desde"
-              className="cursor-pointer form-input block w-32 py-1.5 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              title={fechaDesde ? formatearFecha(fechaDesde) : "Seleccionar fecha inicial"}
+              className="cursor-pointer form-input block w-32 py-1.5 pl-2 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              title={fechaDesde ? formatearFecha(fechaDesde): "Seleccionar fecha inicial"}
             />
             <span className="text-gray-500">-</span>
             <input
+              ref={fechaHastaRef}
               type="date"
               value={fechaHasta}
               onChange={handleFechaHastaChange}
+              onClick={abrirCalendarioHasta}
               placeholder="Hasta"
               className="cursor-pointer form-input block w-32 py-1.5 text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               title={fechaHasta ? formatearFecha(fechaHasta) : "Seleccionar fecha final"}

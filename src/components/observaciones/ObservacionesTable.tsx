@@ -210,7 +210,7 @@ export const ObservacionesTable: React.FC<ObservacionesTableProps> = ({
           {/* Filtro por vendedor */}
           <div>
             <label htmlFor="vendedor" className="block text-sm font-medium text-gray-700 mb-1">
-              Filtrar por vendedor
+              Filtrar por creador observacion (Vendedor)
             </label>
             <select
               id="vendedor"
@@ -276,7 +276,7 @@ export const ObservacionesTable: React.FC<ObservacionesTableProps> = ({
                 </th>
                 <th
                   scope="col"
-                  className="px-10 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => requestSort("observacion")}
                 >
                   <div className="flex items-center">
@@ -285,11 +285,14 @@ export const ObservacionesTable: React.FC<ObservacionesTableProps> = ({
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
                   onClick={() => requestSort("id_vendedor")}
                 >
                   <div className="flex items-center">
-                    <span>Vendedor</span> {getSortIcon("id_vendedor")}
+                    <div>
+                      <span>Creador Observacion</span> {getSortIcon("id_vendedor")}
+                      <div>(Vendedor)</div>
+                    </div>
                   </div>
                 </th>
               </tr>
@@ -313,12 +316,12 @@ export const ObservacionesTable: React.FC<ObservacionesTableProps> = ({
                       {truncateText(getNombreCliente(observacion.id_cliente), 20)}
                     </td>
                     <td
-                      className="px-6 py-4 whitespace-pre-wrap text-sm text-gray-500 break-words"
+                      className="px-3 py-4 whitespace-pre-wrap text-sm text-gray-500 break-words"
                       title={observacion.observacion || ""}
                     >
                       {truncateText(observacion.observacion, 100)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                       {getNombreVendedor(observacion.id_vendedor)}
                     </td>
                   </tr>
@@ -327,7 +330,7 @@ export const ObservacionesTable: React.FC<ObservacionesTableProps> = ({
                 <tr>
                   <td
                     colSpan={4}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center"
+                    className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 text-center"
                   >
                     No hay observaciones disponibles
                   </td>

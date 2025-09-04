@@ -27,9 +27,9 @@ export const NameCell: React.FC<{ text: string | null | undefined; pendientes?: 
   pendientes = 0,
   maxLength = 40 
 }) => (
-  <td className="px-3 py-2 flex flex-row justify-between max-w-[150px] whitespace-pre-wrap text-sm font-medium text-gray-900" title={text || ''}>
+  <td className="px-3 py-2 flex flex-row justify-between text-sm font-medium text-gray-900" title={text || ''}>
     {/* <div className="relative inline-flex"> */}
-    <div className="max-h-[100px] overflow-y-auto break-words ">
+    <div className=" overflow-y-auto ">
       {truncateText(text, maxLength)}
       
     </div>
@@ -58,7 +58,7 @@ export const DescriptionCell: React.FC<{ text: string | null | undefined; maxLen
 
 // Celda de fecha
 export const DateCell: React.FC<{ date: string | null | undefined }> = ({ date }) => (
-  <td className="px-3 py-4 text-center whitespace-nowrap text-sm text-gray-500">
+  <td className="px-3 py-4 text-left whitespace-nowrap text-sm text-gray-500">
     {date ? formatearFecha(date) : '-'}
   </td>
 );

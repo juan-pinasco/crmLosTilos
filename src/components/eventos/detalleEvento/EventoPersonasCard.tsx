@@ -88,7 +88,7 @@ export const EventoPersonasCard: React.FC<EventoPersonasCardProps> = ({
         <div>
           <div className="flex items-center text-sm font-medium text-gray-500 mb-1">
             <User size={16} className="mr-2 text-gray-400" />
-            Vendedor *
+            Vendedor Ejecutor *
           </div>
           {isEditing ? (
             <select

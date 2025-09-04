@@ -8,6 +8,7 @@ import {
   deleteObservacion,
 } from "../../data/ObservacionesCrud";
 import { updateUltimaInteraccion } from "../../data/ClientsCrud";
+import { fetchVendedorByAuthId } from "../../data/VendedoresCrud";
 import { formatearFecha } from "../../utils/dateUtils";
 import { supabase } from "../../integrations/supabase";
 import Swal from "sweetalert2";
@@ -40,21 +41,15 @@ export const ObservacionesCliente = ({
     return data?.user;
   };
 
-  // Función para obtener el ID del vendedor a partir del email
-  const getVendedorIdByEmail = async (email: string): Promise<string | null> => {
+  // Función para obtener el vendedor a partir del ID de autenticación
+  const getVendedorByAuthId = async (authUserId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("vendedores")
-        .select("id")
-        .eq("email", email)
-        .single();
-
-      if (error) {
-        console.error("Error al obtener el vendedor por email:", error);
+      const vendedor = await fetchVendedorByAuthId(authUserId);
+      if (!vendedor) {
+        console.error("No se encontró el vendedor con auth_user_id:", authUserId);
         return null;
       }
-
-      return data?.id || null;
+      return vendedor;
     } catch (error) {
       console.error("Error al buscar el vendedor:", error);
       return null;
@@ -88,8 +83,14 @@ export const ObservacionesCliente = ({
             }
 
             let vendedorId = null;
-            if (user?.email) {
-              vendedorId = await getVendedorIdByEmail(user.email);
+            let nombreVendedor = null;
+            
+            if (user?.id) {
+              const vendedor = await getVendedorByAuthId(user.id);
+              if (vendedor) {
+                vendedorId = vendedor.id;
+                nombreVendedor = vendedor.nombre;
+              }
             }
 
             if (!vendedorId) {
@@ -101,6 +102,7 @@ export const ObservacionesCliente = ({
               id_cliente: clienteId,
               id_vendedor: vendedorId || null,
               observacion: nuevaNota.trim(),
+              nombre_vendedor: nombreVendedor || null,
             };
 
             const resultado = await createObservacion(nuevaObservacion);

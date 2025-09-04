@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Header } from "../components/Header";
 import { GetSession } from "../data/AuthsCrud";
-import { fetchVendedorByAuthId } from "../data/VendedoresCrud";
+import { fetchVendedorByAuthId, updateVendedor } from "../data/VendedoresCrud";
+import Swal from "sweetalert2";
 
 import type { Vendedor } from "../types/SellersType";
 
@@ -9,6 +10,46 @@ export const UserProfile = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<any>(null);
   const [vendedor, setVendedor] = useState<Vendedor | null>(null);
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [nombreVendedor, setNombreVendedor] = useState<string>("");
+  const [saving, setSaving] = useState<boolean>(false);
+
+  const handleSaveNombre = async () => {
+    if (!vendedor) return;
+    
+    try {
+      setSaving(true);
+      
+      const result = await updateVendedor(vendedor.id, { nombre: nombreVendedor });
+      
+      if (result.success) {
+        setVendedor(result.data);
+        setEditMode(false);
+        Swal.fire({
+          title: '¡Éxito!',
+          text: 'Nombre actualizado correctamente',
+          icon: 'success',
+          confirmButtonColor: '#10B981'
+        });
+      } else {
+        Swal.fire({
+          title: 'Error',
+          text: `No se pudo actualizar el nombre: ${result.error}`,
+          icon: 'error',
+          confirmButtonColor: '#EF4444'
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        title: 'Error',
+        text: `Error al actualizar el nombre: ${error.message || 'Error desconocido'}`,
+        icon: 'error',
+        confirmButtonColor: '#EF4444'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -29,6 +70,7 @@ export const UserProfile = () => {
         const vendedorData = await fetchVendedorByAuthId(sessionUser.id);
         if (vendedorData) {
           setVendedor(vendedorData);
+          setNombreVendedor(vendedorData.nombre || "");
         }
       } catch (error) {
         console.error("Error al obtener datos del usuario:", error);
@@ -53,33 +95,53 @@ export const UserProfile = () => {
             </div>
           ) : (
             <>
-              {user && (
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Información de la cuenta</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-4 rounded-md">
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{user.email}</p>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-md">
-                      <p className="text-sm text-gray-500">ID de Usuario</p>
-                      <p className="font-medium">{user.id}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {vendedor ? (
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Información del Vendedor</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-semibold text-gray-800">Información del Vendedor</h2>
+                    {!editMode ? (
+                      <button 
+                        onClick={() => setEditMode(true)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                      >
+                        Editar
+                      </button>
+                    ) : (
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => {
+                            setEditMode(false);
+                            setNombreVendedor(vendedor.nombre || "");
+                          }}
+                          className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors"
+                          disabled={saving}
+                        >
+                          Cancelar
+                        </button>
+                        <button 
+                          onClick={handleSaveNombre}
+                          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                          disabled={saving}
+                        >
+                          {saving ? "Guardando..." : "Guardar"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-4">
                     <div className="bg-gray-50 p-4 rounded-md">
                       <p className="text-sm text-gray-500">Nombre</p>
-                      <p className="font-medium">{vendedor.nombre}</p>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-md">
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">{vendedor.email}</p>
+                      {editMode ? (
+                        <input
+                          type="text"
+                          value={nombreVendedor}
+                          onChange={(e) => setNombreVendedor(e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                          disabled={saving}
+                        />
+                      ) : (
+                        <p className="font-medium">{vendedor.nombre}</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -88,6 +150,18 @@ export const UserProfile = () => {
                   <p className="text-yellow-700">
                     No se encontró información de vendedor asociada a esta cuenta.
                   </p>
+                </div>
+              )}
+              
+              {user && (
+                <div className="mt-8">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Información de la cuenta</h2>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-md">
+                      <p className="text-sm text-gray-500">Email</p>
+                      <p className="font-medium">{user.email}</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </>
