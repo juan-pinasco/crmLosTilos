@@ -128,7 +128,11 @@ export const createObservacion = async (observacion: Observacion) => {
       // Asegurarse de que id_cliente sea un string (UUID)
       id_cliente: String(observacion.id_cliente),
       // Si id_vendedor es null o undefined, dejarlo así, de lo contrario convertirlo a string
-      id_vendedor: observacion.id_vendedor ? String(observacion.id_vendedor) : null
+      id_vendedor: observacion.id_vendedor ? String(observacion.id_vendedor) : null,
+      // Usar created_at personalizado si se proporciona, sino usar la fecha actual
+      created_at: observacion.created_at 
+        ? new Date(observacion.created_at).toISOString()
+        : new Date().toISOString()
     };
     
     console.log("Datos a insertar en Supabase:", nuevaObservacion);
