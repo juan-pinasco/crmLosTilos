@@ -29,6 +29,7 @@ export const ObservacionesCliente = ({
   setObservaciones,
 }: ObservacionesClienteProps) => {
   const [nuevaNota, setNuevaNota] = useState<string>("");
+  const [fechaObservacion, setFechaObservacion] = useState<string>("");
   const [loadingObservaciones, setLoadingObservaciones] =
     useState<boolean>(false);
 
@@ -46,7 +47,10 @@ export const ObservacionesCliente = ({
     try {
       const vendedor = await fetchVendedorByAuthId(authUserId);
       if (!vendedor) {
-        console.error("No se encontró el vendedor con auth_user_id:", authUserId);
+        console.error(
+          "No se encontró el vendedor con auth_user_id:",
+          authUserId
+        );
         return null;
       }
       return vendedor;
@@ -55,6 +59,22 @@ export const ObservacionesCliente = ({
       return null;
     }
   };
+
+  // Función para obtener la fecha y hora actual en formato ISO local
+  const getFechaActual = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  // Inicializar la fecha con la fecha actual cuando el componente se monta
+  useState(() => {
+    setFechaObservacion(getFechaActual());
+  });
 
   const handleAgregarNota = async () => {
     if (nuevaNota.trim() && clienteId) {
@@ -84,7 +104,7 @@ export const ObservacionesCliente = ({
 
             let vendedorId = null;
             let nombreVendedor = null;
-            
+
             if (user?.id) {
               const vendedor = await getVendedorByAuthId(user.id);
               if (vendedor) {
@@ -102,6 +122,9 @@ export const ObservacionesCliente = ({
               id_cliente: clienteId,
               id_vendedor: vendedorId || null,
               observacion: nuevaNota.trim(),
+              created_at: fechaObservacion
+                ? new Date(fechaObservacion).toISOString()
+                : new Date().toISOString(),
               nombre_vendedor: nombreVendedor || null,
             };
 
@@ -114,25 +137,43 @@ export const ObservacionesCliente = ({
               setObservaciones(observacionesActualizadas);
 
               // Actualizar la fecha de última interacción del cliente
-              const nuevaObservacionCreada = resultado[0];
-              if (nuevaObservacionCreada && nuevaObservacionCreada.created_at) {
-                // Actualizar en la base de datos
-                await updateUltimaInteraccion(
-                  clienteId,
-                  nuevaObservacionCreada.created_at
+              // Buscar la observación con la fecha más reciente (no necesariamente la recién creada)
+              if (
+                observacionesActualizadas &&
+                observacionesActualizadas.length > 0
+              ) {
+                // Ordenar las observaciones por fecha descendente para obtener la más reciente
+                const observacionesOrdenadas = [
+                  ...observacionesActualizadas,
+                ].sort(
+                  (a, b) =>
+                    new Date(b.created_at || "").getTime() -
+                    new Date(a.created_at || "").getTime()
                 );
 
-                // Actualizar en el estado local
-                if (cliente) {
-                  setCliente({
-                    ...cliente,
-                    ultima_interaccion: nuevaObservacionCreada.created_at,
-                  });
+                const observacionMasReciente = observacionesOrdenadas[0];
+                if (
+                  observacionMasReciente &&
+                  observacionMasReciente.created_at
+                ) {
+                  // Actualizar en la base de datos
+                  await updateUltimaInteraccion(
+                    clienteId,
+                    observacionMasReciente.created_at
+                  );
+
+                  // Actualizar en el estado local
+                  if (cliente) {
+                    setCliente({
+                      ...cliente,
+                      ultima_interaccion: observacionMasReciente.created_at,
+                    });
+                  }
                 }
               }
-
-              // Limpiar el campo de texto
+              // Limpiar los campos
               setNuevaNota("");
+              setFechaObservacion(getFechaActual());
 
               // Mostrar alerta de éxito
               Swal.fire({
@@ -166,7 +207,6 @@ export const ObservacionesCliente = ({
     }
   };
 
-  // Función para borrar una observación
   // Función para borrar una observación
   const handleBorrarObservacion = async (observacionId: number) => {
     if (!clienteId) return;
@@ -331,21 +371,37 @@ export const ObservacionesCliente = ({
         </div>
       )}
 
-      <textarea
-        className="bg-white w-full border border-gray-200 rounded-lg p-4 mt-4 text-sm"
-        placeholder="Añadir una nueva observacion..."
-        value={nuevaNota}
-        onChange={(e) => setNuevaNota(e.target.value)}
-        rows={4}
-        disabled={loadingObservaciones}
-      />
-      <button
-        onClick={handleAgregarNota}
-        className="cursor-pointer mt-1 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-md flex items-center justify-center w-full"
-        disabled={loadingObservaciones || !nuevaNota.trim()}
-      >
-        {loadingObservaciones ? "Guardando..." : <>Agregar Observacion</>}
-      </button>
+      <div className="mt-4  border border-dashed border-green-500 p-2 rounded-lg">
+        <textarea
+          className="bg-white w-full border border-gray-200 rounded-lg p-4 text-sm"
+          placeholder="Añadir una nueva observacion..."
+          value={nuevaNota}
+          onChange={(e) => setNuevaNota(e.target.value)}
+          rows={4}
+          disabled={loadingObservaciones}
+        />
+        <div className="mb-4">
+          <label
+            htmlFor="fechaObservacion"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          ></label>
+          <input
+            id="fechaObservacion"
+            type="datetime-local"
+            className="w-full border border-gray-200 bg-white rounded-lg p-2 text-sm"
+            value={fechaObservacion}
+            onChange={(e) => setFechaObservacion(e.target.value)}
+            disabled={loadingObservaciones}
+          />
+        </div>
+        <button
+          onClick={handleAgregarNota}
+          className="cursor-pointer bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-6 rounded-md flex items-center justify-center w-full"
+          disabled={loadingObservaciones || !nuevaNota.trim()}
+        >
+          {loadingObservaciones ? "Guardando..." : <>Agregar Observacion</>}
+        </button>
+      </div>
     </div>
   );
 };
