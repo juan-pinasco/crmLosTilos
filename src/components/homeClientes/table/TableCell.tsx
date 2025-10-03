@@ -27,18 +27,18 @@ export const NameCell: React.FC<{ text: string | null | undefined; pendientes?: 
   pendientes = 0,
   maxLength = 40 
 }) => (
-  <td className="px-3 py-2 flex flex-row justify-between text-sm font-medium text-gray-900" title={text || ''}>
-    {/* <div className="relative inline-flex"> */}
-    <div className=" overflow-y-auto ">
-      {truncateText(text, maxLength)}
-      
-    </div>
-    <div>
-    {pendientes > 0 && (
-        <span className="ml-1 inline-flex items-center justify-center text-xs font-bold leading-none text-white bg-red-600 rounded-full w-5 h-5">
-          {pendientes}
-        </span>
-      )}
+  <td className="px-3 py-2 text-sm font-medium text-gray-900" title={text || ''}>
+    <div className="flex flex-row justify-between items-center">
+      <div className="overflow-y-auto">
+        {truncateText(text, maxLength)}
+      </div>
+      <div>
+        {pendientes > 0 && (
+          <span className="ml-1 inline-flex items-center justify-center text-xs font-bold leading-none text-white bg-red-600 rounded-full w-5 h-5">
+            {pendientes}
+          </span>
+        )}
+      </div>
     </div>
   </td>
 );

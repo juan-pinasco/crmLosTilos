@@ -3,6 +3,8 @@ import { Header } from "../components/Header";
 import { GetSession } from "../data/AuthsCrud";
 import { fetchVendedorByAuthId, updateVendedor } from "../data/VendedoresCrud";
 import Swal from "sweetalert2";
+import { Download } from "lucide-react";
+import { exportBackupToExcel } from "../utils/exportBackup";
 
 import type { Vendedor } from "../types/SellersType";
 
@@ -13,6 +15,10 @@ export const UserProfile = () => {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [nombreVendedor, setNombreVendedor] = useState<string>("");
   const [saving, setSaving] = useState<boolean>(false);
+
+  const handleBackup = async () => {
+    await exportBackupToExcel();
+  };
 
   const handleSaveNombre = async () => {
     if (!vendedor) return;
@@ -87,7 +93,19 @@ export const UserProfile = () => {
       <Header />
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white shadow-md rounded-lg p-6 max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold text-green-600 mb-6">Perfil de Usuario</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-green-600">Perfil de Usuario</h1>
+            {user?.email === 'juanpinascoprogramacion@gmail.com' && (
+              <button
+                onClick={handleBackup}
+                className="cursor-pointer bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition-colors flex items-center gap-2"
+                title="Descargar backup de datos"
+              >
+                <Download className="w-4 h-4" />
+                Exportar Backup
+              </button>
+            )}
+          </div>
           
           {loading ? (
             <div className="flex justify-center">

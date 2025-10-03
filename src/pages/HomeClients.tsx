@@ -142,7 +142,7 @@ export const Home = () => {
         {/* Contenedor principal que divide la pantalla en dos columnas */}
         <div className="flex flex-col md:flex-row gap-6">
           {/* Columna izquierda para los filtros */}
-          <div className="md:w-2/10 2xl:w-1/10 h-[calc(100vh-111px)] overflow-y-auto">
+          <div className="md:w-2/10 2xl:w-2/10 h-[calc(100vh-111px)] overflow-y-auto">
             <FiltrosCliente
               onFiltrosChange={handleFiltrosChange}
               initialFiltros={filtros}
