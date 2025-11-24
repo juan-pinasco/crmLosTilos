@@ -11,7 +11,8 @@ export const fetchEventos = async () => {
         vendedor:tarea_vendedor_id(id, nombre),
         cliente:tarea_client_id(id, nombre)
       `)
-      .order("fecha_realizacion", { ascending: false });
+      .order("estado_tarea", { ascending: false })
+      .order("fecha_realizacion", { ascending: true });
     
     if (error) {
       console.error("Error al obtener eventos:", error);
@@ -180,6 +181,30 @@ export const actualizarEvento = async (eventoId: string, eventoData: {
     console.error("Error al actualizar evento:", err);
     return null;
   }
+};
+
+// ======================================================
+// Obtener cantidad de tareas pendientes por cliente
+// Devuelve un Map<clienteId, cantidad>
+// ======================================================
+export const fetchPendientesPorCliente = async () => {
+  const { data, error } = await supabase
+    .from("eventos")
+    .select("id, tarea_client_id")
+    .eq("estado_tarea", "Pendiente");
+
+  if (error) {
+    console.error("Error al obtener pendientes:", error);
+    throw error;
+  }
+
+  const map = new Map<string, number>();
+  (data || []).forEach((row: any) => {
+    const idCliente = row.tarea_client_id as string;
+    if (!idCliente) return;
+    map.set(idCliente, (map.get(idCliente) || 0) + 1);
+  });
+  return map;
 };
 
 // Obtener evento por ID

@@ -145,16 +145,16 @@ export const CalendarioEventos = () => {
   };
 
   // Función para manejar el clic en un evento
+  // Función para manejar el clic en un evento existente
   const handleSelectEvent = (event: CalendarEvent) => {
-    // Aquí podrías mostrar un modal con los detalles del evento o navegar a una página de detalle
-    alert(`
-      Evento: ${event.title}
-      Cliente: ${event.cliente}
-      Vendedor: ${event.vendedor}
-      Estado: ${event.estado}
-      Descripción: ${event.descripcion || 'Sin descripción'}
-      Fecha: ${format(event.start, 'dd/MM/yyyy HH:mm')}
-    `);
+    // Redirigir al detalle del evento/tarea
+    navigate(`/detalle-evento/${event.id}`);
+  };
+
+  // Función para manejar la selección de un día/slot vacío
+  const handleSelectSlot = (slotInfo: { start: Date }) => {
+    const fechaSeleccionada = format(slotInfo.start, 'yyyy-MM-dd');
+    navigate(`/create-evento?fecha=${fechaSeleccionada}`);
   };
 
   return (
@@ -295,6 +295,7 @@ export const CalendarioEventos = () => {
               onNavigate={(date) => setCurrentDate(date)}
               popup
               selectable
+              onSelectSlot={handleSelectSlot}
             />
           </div>
         )}

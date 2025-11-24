@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { clearOnLogout } from '../utils/storageManager';
 import { supabase } from '../integrations/supabase';
 import { GetSession } from '../data/AuthsCrud';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 export const Header = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [pendingTasks, setPendingTasks] = useState<number>(0);
 
   useEffect(() => {
     // Obtener la sesión actual
@@ -31,6 +33,49 @@ export const Header = () => {
     };
   }, []);
 
+  // Obtener la cantidad de tareas pendientes del usuario actual
+  useEffect(() => {
+    const fetchPendingTasks = async () => {
+      try {
+        if (!userEmail) {
+          setPendingTasks(0);
+          return;
+        }
+        const sessionUser = await GetSession();
+        if (!sessionUser) {
+          setPendingTasks(0);
+          return;
+        }
+        // Buscar el vendedor vinculado al usuario autenticado
+        const { data: vendedor, error: vendedorError } = await supabase
+          .from('vendedores')
+          .select('id')
+          .eq('auth_user_id', sessionUser.id)
+          .single();
+        if (vendedorError) throw vendedorError;
+
+        if (!vendedor?.id) {
+          setPendingTasks(0);
+          return;
+        }
+
+        // Contar tareas con estado pendiente o en progreso asignadas al vendedor
+        const { count, error: countError } = await supabase
+          .from('eventos')
+          .select('id', { count: 'exact', head: true })
+          .eq('tarea_vendedor_id', vendedor.id)
+          .in('estado_tarea', ['Pendiente']);
+        if (countError) throw countError;
+
+        setPendingTasks(count || 0);
+      } catch (err) {
+        console.error('Error al obtener tareas pendientes:', err);
+      }
+    };
+
+    fetchPendingTasks();
+  }, [userEmail]);
+
   const handleSignOut = async () => {
     try {
             // Limpiar localStorage de forma centralizada y notificar a la aplicación
@@ -46,6 +91,8 @@ export const Header = () => {
   };
 
   const location = useLocation();
+  const navigate = useNavigate();
+  const handleBack = () => navigate(-1);
 
   // Función para determinar si una pestaña está activa
   const isActive = (path: string) => {
@@ -54,10 +101,14 @@ export const Header = () => {
 
   return (
     <header className="bg-white shadow-md p-4">
-      <div className="container mx-auto">
         <div className="flex justify-between items-center">
           {/* Título a la izquierda */}
-          <h1 className="text-green-600 text-2xl font-bold">Los Tilos</h1>
+          <div className="flex items-center gap-2">
+            <button onClick={handleBack} className="mr-4 focus:outline-none">
+              <ArrowLeft className="cursor-pointer text-gray-600 w-6 h-6" strokeWidth={3} />
+            </button>
+            <h1 className="text-green-600 text-2xl font-bold">Los Tilos</h1>
+          </div>
           
           {/* Pestañas de navegación en el medio */}
           {userEmail && (
@@ -80,9 +131,14 @@ export const Header = () => {
                   e.stopPropagation();
                   window.location.href = '/eventos';
                 }}
-                className={`py-2 px-3 font-medium ${isActive('/eventos')}`}
+                className={`py-2 px-3 font-medium relative ${isActive('/eventos')}`}
               >
                 Tareas
+                {pendingTasks > 0 && (
+                  <span className="absolute -top-1 -right-3 bg-red-500 text-white rounded-full text-xs px-2">
+                    {pendingTasks}
+                  </span>
+                )}
               </a>
             </nav>
           )}
@@ -100,7 +156,6 @@ export const Header = () => {
             </div>
           )}
         </div>
-      </div>
     </header>
   );
 };

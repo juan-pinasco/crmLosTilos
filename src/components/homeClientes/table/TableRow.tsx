@@ -14,6 +14,7 @@ import {
 
 interface TableRowProps {
   cliente: Cliente;
+  pendientes: number;
   selectedColumns: { [key: string]: boolean };
   getNombreVendedor: (id: string) => string;
   handleDeleteClient: (id: string) => void;
@@ -22,6 +23,7 @@ interface TableRowProps {
 
 const TableRow: React.FC<TableRowProps> = ({
   cliente,
+  pendientes,
   selectedColumns,
   getNombreVendedor,
   handleDeleteClient,
@@ -30,7 +32,7 @@ const TableRow: React.FC<TableRowProps> = ({
   return (
     <tr 
       key={cliente.id || index}
-      className="hover:bg-gray-50 cursor-pointer"
+      className="hover:bg-gray-100 cursor-pointer"
       onClick={(e) => {
         e.preventDefault();
         // Usar window.location.href para forzar una navegación completa
@@ -40,20 +42,17 @@ const TableRow: React.FC<TableRowProps> = ({
       {selectedColumns['ultima_interaccion'] && (
         <DateCell date={cliente.ultima_interaccion} />
       )}
-      {selectedColumns['fecha_recontacto'] && (
-        <DateCell date={cliente.fecha_recontacto} />
-      )}
       {selectedColumns['nombre'] && (
-        <NameCell text={cliente.nombre} />
-      )}
-      {selectedColumns['descripcion'] && (
-        <DescriptionCell text={cliente.descripcion} />
+        <NameCell text={cliente.nombre} pendientes={pendientes} />
       )}
       {selectedColumns['email'] && (
         <TextCell text={cliente.email} />
       )}
       {selectedColumns['telefono'] && (
         <TextCell text={cliente.telefono} />
+      )}
+      {selectedColumns['descripcion'] && (
+        <DescriptionCell text={cliente.descripcion} />
       )}
       {selectedColumns['pais'] && (
         <TextCell text={cliente.pais} />
@@ -73,6 +72,9 @@ const TableRow: React.FC<TableRowProps> = ({
       {selectedColumns['temperatura'] && (
         <TemperaturaCell temperatura={cliente.temperatura} />
       )}
+      {selectedColumns['fecha_recontacto'] && (
+        <DateCell date={cliente.fecha_recontacto} />
+      )}
       {selectedColumns['vendedor_id'] && (
         <VendedorCell 
           vendedorId={cliente.vendedor_id} 
@@ -85,7 +87,7 @@ const TableRow: React.FC<TableRowProps> = ({
 
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         <button
-          className="text-red-600 hover:text-red-900 cursor-pointer"
+          className="text-red-400 hover:text-red-800 cursor-pointer"
           onClick={(e) => {
             e.stopPropagation(); // Evita que el evento de clic se propague a la fila
             handleDeleteClient(cliente.id);

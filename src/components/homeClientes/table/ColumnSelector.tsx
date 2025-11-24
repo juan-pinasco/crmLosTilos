@@ -17,7 +17,7 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
   onClose
 }) => {
   return (
-    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10 p-4 border border-gray-200">
+    <div className="absolute right-0 mt-100 w-64 bg-white rounded-md shadow-lg z-12 p-4 border border-gray-200">
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-sm font-medium text-gray-700">Columnas visibles:</h3>
         <button 
@@ -29,27 +29,34 @@ const ColumnSelector: React.FC<ColumnSelectorProps> = ({
       </div>
       <div className="max-h-60 overflow-y-auto mb-3">
         {availableColumns.map((column) => (
-          <div key={column.key} className="flex items-center mb-2">
+          <div key={column.key} className="cursor-pointer flex items-center mb-2">
             <input
               type="checkbox"
               id={`column-${column.key}`}
               checked={!!selectedColumns[column.key]}
               onChange={() => handleColumnChange(column.key)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="cursor-pointer h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor={`column-${column.key}`} className="ml-2 text-sm text-gray-700">
+            <label htmlFor={`column-${column.key}`} className="cursor-pointer ml-2 text-sm text-gray-700">
               {column.label}
             </label>
           </div>
         ))}
       </div>
-      <div className="flex justify-end">
-        <button
-          onClick={resetColumns}
-          className="cursor-pointer text-sm px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+      <div className="flex justify-between">
+      <button
+          onClick={onClose}
+          className="cursor-pointer text-sm px-3 py-1 bg-green-200 text-gray-700 rounded hover:bg-green-300 transition-colors"
         >
-          Reiniciar
+          Aceptar
         </button>
+        <button
+          onClick={() => {resetColumns(); onClose();}}
+          className="cursor-pointer text-sm px-3 py-1 bg-red-200 text-gray-700 rounded hover:bg-red-300 transition-colors"
+        >
+          Cancelar/Reiniciar
+        </button>
+        
       </div>
     </div>
   );
