@@ -79,7 +79,7 @@ const TableHeader: React.FC<TableHeaderProps> = ({
               >
                 <div className="flex justify-center items-center whitespace-pre-line relative">
                   <span>{column.label}</span> {getSortIcon(column.key)}
-                  {["ultima_interaccion", "fecha_recontacto"].includes(
+                  {["ultima_interaccion", "fecha_recontacto", "created_at"].includes(
                     column.key
                   ) && (
                     <>

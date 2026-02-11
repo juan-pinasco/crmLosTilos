@@ -105,21 +105,50 @@ export const Header = () => {
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
         confirmButtonText: 'Sí, cerrar sesión',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        allowOutsideClick: false,
+        allowEscapeKey: true
       });
       
       // Si el usuario confirma, cerrar sesión
       if (result.isConfirmed) {
-        // Limpiar localStorage de forma centralizada y notificar a la aplicación
-        await clearOnLogout();
+        // Mostrar loading mientras se cierra sesión
+        Swal.fire({
+          title: 'Cerrando sesión...',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+        try {
+          // Limpiar localStorage de forma centralizada
+          await clearOnLogout();
+          
+          // Cerrar sesión en Supabase con timeout para evitar bloqueos
+          const signOutPromise = supabase.auth.signOut();
+          const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 3000));
+          
+          await Promise.race([signOutPromise, timeoutPromise]);
+        } catch (signOutError) {
+          console.error('Error al cerrar sesión en Supabase:', signOutError);
+          // Continuar de todas formas para limpiar el estado local
+        }
         
-        // Cerrar sesión en Supabase
-        await supabase.auth.signOut();
-        
-        console.log('Se ha cerrado sesión y se han limpiado los filtros del localStorage');
+        // Forzar recarga de la página para limpiar cualquier estado residual
+        window.location.href = '/';
       }
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+      // Si hay cualquier error, forzar cierre de sesión de todas formas
+      try {
+        await clearOnLogout();
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.error('Error en fallback de cierre de sesión:', e);
+      }
+      window.location.href = '/';
     }
   };
 
@@ -140,6 +169,7 @@ export const Header = () => {
             <button onClick={handleBack} className="mr-4 focus:outline-none">
               <ArrowLeft className="cursor-pointer text-gray-600 w-6 h-6" strokeWidth={3} />
             </button>
+            <img src="/logoLosTilos.svg" alt="Los Tilos Logo" className="w-8 h-8" />
             <h1 className="text-green-600 text-2xl font-bold">Los Tilos</h1>
           </div>
           

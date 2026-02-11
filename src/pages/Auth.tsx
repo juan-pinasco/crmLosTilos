@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../integrations/supabase';
 import { useNavigate } from 'react-router';
 import Swal from 'sweetalert2';
+import { Eye, EyeOff } from 'lucide-react';
 
 export const Auth = () => {
     const [email, setEmail] = useState('');
@@ -12,6 +13,9 @@ export const Auth = () => {
     const [isRecovery, setIsRecovery] = useState(false);
     const [newPassword, setNewPassword] = useState('');
     const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -119,8 +123,28 @@ export const Auth = () => {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-50 px-4">
-            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+        <div className="relative flex justify-center items-center min-h-screen bg-gradient-to-br from-green-100 to-green-200 px-4 overflow-hidden">
+            {/* Logo de fondo con efecto sutil */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                <img 
+                    src="/logoLosTilos.svg" 
+                    alt="Los Tilos Background" 
+                    className="w-[600px] h-[600px] object-contain"
+                />
+            </div>
+            
+            {/* Formulario de autenticación */}
+            <div className="relative z-10 w-full max-w-md p-8 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl">
+                {/* Logo y título arriba del formulario */}
+                <div className="flex items-center justify-center gap-3 mb-6">
+                    <h1 className="text-4xl font-bold text-green-600">Los Tilos</h1>
+                    <img 
+                        src="/logoLosTilos.svg" 
+                        alt="Los Tilos Logo" 
+                        className="w-14 h-14"
+                    />
+                </div>
+                
                 <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
                     {isRecovery ? 'Establecer nueva contraseña' : resetPassword ? 'Restablecer Contraseña' : 'Iniciar Sesión'}
                 </h1>
@@ -137,29 +161,47 @@ export const Auth = () => {
                             <label htmlFor="newPassword" className="font-medium text-sm text-gray-700">
                                 Nueva contraseña
                             </label>
-                            <input
-                                id="newPassword"
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                required
-                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="••••••••"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="newPassword"
+                                    type={showNewPassword ? "text" : "password"}
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    required
+                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewPassword(!showNewPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                >
+                                    {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
                         <div className="flex flex-col gap-2">
                             <label htmlFor="confirmNewPassword" className="font-medium text-sm text-gray-700">
                                 Confirmar contraseña
                             </label>
-                            <input
-                                id="confirmNewPassword"
-                                type="password"
-                                value={confirmNewPassword}
-                                onChange={(e) => setConfirmNewPassword(e.target.value)}
-                                required
-                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="••••••••"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="confirmNewPassword"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={confirmNewPassword}
+                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                    required
+                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
 
                         <button 
@@ -208,15 +250,24 @@ export const Auth = () => {
                             <label htmlFor="password" className="font-medium text-sm text-gray-700">
                                 Contraseña
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="••••••••"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="••••••••"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
                         </div>
                         
                         <button 

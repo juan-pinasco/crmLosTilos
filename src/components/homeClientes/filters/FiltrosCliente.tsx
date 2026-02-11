@@ -111,7 +111,7 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
                   checked={filtros.estadosCliente.includes(estado)}
                   onChange={(e) => handleEstadoClienteChange(estado, e.nativeEvent as unknown as React.MouseEvent)}
                 />
-                <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_CLIENTE_COLORS[estado]}`}>{estado}</span>
+                <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${ESTADO_CLIENTE_COLORS[estado]}`}>{estado}</span>
               </label>
             ))}
           </div>

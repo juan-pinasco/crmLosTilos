@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router";
-import { fetchClienteById } from "../data/ClientsCrud";
+import { fetchClienteById, updateUltimaInteraccion } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
 import { fetchObservacionesByClienteId } from "../data/ObservacionesCrud";
 import type { Cliente } from "../types/ClientsType";
@@ -43,6 +43,23 @@ export const ProfileClient = () => {
         // Cargar observaciones del cliente
         const observacionesData = await fetchObservacionesByClienteId(id);
         setObservaciones(observacionesData);
+
+        // Si no hay observaciones, actualizar última interacción con fecha de creación
+        if (data && (!observacionesData || observacionesData.length === 0)) {
+          if (data.created_at) {
+            await updateUltimaInteraccion(id, data.created_at);
+            
+            // Actualizar el estado local del cliente
+            setCliente({
+              ...data,
+              ultima_interaccion: data.created_at,
+            });
+            
+            console.log(
+              `Cliente sin observaciones. Última interacción actualizada con fecha de creación: ${data.created_at}`
+            );
+          }
+        }
 
         setLoading(false);
       }

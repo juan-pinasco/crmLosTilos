@@ -1,14 +1,15 @@
-import { useState } from "react";
-import { Trash } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Trash, SquarePen } from "lucide-react";
 import type { Observacion } from "../../types/ObservationsType";
 import type { Cliente } from "../../types/ClientsType";
 import {
   fetchObservacionesByClienteId,
   createObservacion,
   deleteObservacion,
+  updateObservacion,
 } from "../../data/ObservacionesCrud";
 import { updateUltimaInteraccion } from "../../data/ClientsCrud";
-import { fetchVendedorByAuthId } from "../../data/VendedoresCrud";
+import { fetchVendedorByAuthId, fetchVendedores } from "../../data/VendedoresCrud";
 import { formatearFecha } from "../../utils/dateUtils";
 import { supabase } from "../../integrations/supabase";
 import Swal from "sweetalert2";
@@ -30,8 +31,16 @@ export const ObservacionesCliente = ({
 }: ObservacionesClienteProps) => {
   const [nuevaNota, setNuevaNota] = useState<string>("");
   const [fechaObservacion, setFechaObservacion] = useState<string>("");
+  const [vendedorSeleccionado, setVendedorSeleccionado] = useState<string>("");
   const [loadingObservaciones, setLoadingObservaciones] =
     useState<boolean>(false);
+  
+  // Estados para la edición
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [textoEditando, setTextoEditando] = useState<string>("");
+  const [fechaEditando, setFechaEditando] = useState<string>("");
+  const [vendedorEditando, setVendedorEditando] = useState<string>("");
+  const [vendedores, setVendedores] = useState<any[]>([]);
 
   // Función para mostrar texto vacío en gris claro
   const vacio = () => <span className="text-gray-400">Sin datos</span>;
@@ -76,6 +85,31 @@ export const ObservacionesCliente = ({
     setFechaObservacion(getFechaActual());
   });
 
+  // Cargar vendedores al montar el componente
+  useEffect(() => {
+    const loadVendedores = async () => {
+      try {
+        const data = await fetchVendedores();
+        if (data) {
+          setVendedores(data);
+          
+          // Preseleccionar el usuario actual
+          const user = await getCurrentUser();
+          if (user?.id) {
+            const vendedorActual = await getVendedorByAuthId(user.id);
+            if (vendedorActual) {
+              setVendedorSeleccionado(vendedorActual.id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar vendedores:", error);
+      }
+    };
+
+    loadVendedores();
+  }, []);
+
   const handleAgregarNota = async () => {
     if (nuevaNota.trim() && clienteId) {
       // Mostrar alerta de confirmación antes de agregar la observación
@@ -94,27 +128,29 @@ export const ObservacionesCliente = ({
           setLoadingObservaciones(true);
 
           try {
-            // Obtener el usuario actual para el id_vendedor
-            const user = await getCurrentUser();
-
             // Verificar si el cliente existe en la base de datos
             if (!cliente) {
               throw new Error("Cliente no encontrado");
             }
 
-            let vendedorId = null;
+            // Usar el vendedor seleccionado o el usuario actual como fallback
+            let vendedorId = vendedorSeleccionado || null;
             let nombreVendedor = null;
 
-            if (user?.id) {
-              const vendedor = await getVendedorByAuthId(user.id);
-              if (vendedor) {
-                vendedorId = vendedor.id;
-                nombreVendedor = vendedor.nombre;
+            if (vendedorId) {
+              // Buscar el nombre del vendedor seleccionado
+              const vendedorEncontrado = vendedores.find(v => v.id === vendedorId);
+              nombreVendedor = vendedorEncontrado?.nombre || null;
+            } else {
+              // Fallback: usar el usuario actual si no se seleccionó vendedor
+              const user = await getCurrentUser();
+              if (user?.id) {
+                const vendedor = await getVendedorByAuthId(user.id);
+                if (vendedor) {
+                  vendedorId = vendedor.id;
+                  nombreVendedor = vendedor.nombre;
+                }
               }
-            }
-
-            if (!vendedorId) {
-              console.warn("No se pudo obtener el ID del vendedor");
             }
 
             // Crear nueva observación
@@ -171,9 +207,22 @@ export const ObservacionesCliente = ({
                   }
                 }
               }
-              // Limpiar los campos
+              // Limpiar los campos y preseleccionar usuario actual
               setNuevaNota("");
               setFechaObservacion(getFechaActual());
+              
+              // Volver a preseleccionar el usuario actual
+              const user = await getCurrentUser();
+              if (user?.id) {
+                const vendedorActual = await getVendedorByAuthId(user.id);
+                if (vendedorActual) {
+                  setVendedorSeleccionado(vendedorActual.id);
+                } else {
+                  setVendedorSeleccionado("");
+                }
+              } else {
+                setVendedorSeleccionado("");
+              }
 
               // Mostrar alerta de éxito
               Swal.fire({
@@ -204,6 +253,101 @@ export const ObservacionesCliente = ({
           }
         }
       });
+    }
+  };
+
+  // Función para iniciar la edición de una observación
+  const handleEditarObservacion = (observacion: Observacion) => {
+    setEditandoId(observacion.id as number);
+    setTextoEditando(observacion.observacion);
+    setVendedorEditando(observacion.id_vendedor || "");
+    
+    // Convertir la fecha a formato datetime-local
+    if (observacion.created_at) {
+      const fecha = new Date(observacion.created_at);
+      const year = fecha.getFullYear();
+      const month = String(fecha.getMonth() + 1).padStart(2, "0");
+      const day = String(fecha.getDate()).padStart(2, "0");
+      const hours = String(fecha.getHours()).padStart(2, "0");
+      const minutes = String(fecha.getMinutes()).padStart(2, "0");
+      setFechaEditando(`${year}-${month}-${day}T${hours}:${minutes}`);
+    }
+  };
+
+  // Función para cancelar la edición
+  const handleCancelarEdicion = () => {
+    setEditandoId(null);
+    setTextoEditando("");
+    setFechaEditando("");
+    setVendedorEditando("");
+  };
+
+  // Función para guardar la edición
+  const handleGuardarEdicion = async () => {
+    if (!editandoId || !textoEditando.trim()) return;
+
+    try {
+      setLoadingObservaciones(true);
+
+      const resultado = await updateObservacion(
+        editandoId,
+        textoEditando.trim(),
+        fechaEditando,
+        vendedorEditando
+      );
+
+      if (resultado) {
+        // Recargar las observaciones
+        const observacionesActualizadas = await fetchObservacionesByClienteId(clienteId);
+        setObservaciones(observacionesActualizadas);
+
+        // Actualizar la fecha de última interacción si es necesario
+        if (observacionesActualizadas && observacionesActualizadas.length > 0) {
+          const observacionesOrdenadas = [...observacionesActualizadas].sort(
+            (a, b) =>
+              new Date(b.created_at || "").getTime() -
+              new Date(a.created_at || "").getTime()
+          );
+
+          const observacionMasReciente = observacionesOrdenadas[0];
+          if (observacionMasReciente && observacionMasReciente.created_at && cliente) {
+            await updateUltimaInteraccion(clienteId, observacionMasReciente.created_at);
+            setCliente({
+              ...cliente,
+              ultima_interaccion: observacionMasReciente.created_at,
+            });
+          }
+        }
+
+        // Limpiar el estado de edición
+        handleCancelarEdicion();
+
+        // Mostrar alerta de éxito
+        Swal.fire({
+          icon: "success",
+          title: "¡Observación actualizada!",
+          text: "La observación ha sido actualizada correctamente",
+          confirmButtonColor: "#10B981",
+          timer: 2000,
+          timerProgressBar: true,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo actualizar la observación",
+          confirmButtonColor: "#EF4444",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Ocurrió un error al actualizar la observación",
+        confirmButtonColor: "#EF4444",
+      });
+    } finally {
+      setLoadingObservaciones(false);
     }
   };
 
@@ -329,40 +473,106 @@ export const ObservacionesCliente = ({
             key={observacion.id}
             className="mb-6 border border-gray-500 rounded-lg p-4 overflow-hidden"
           >
-            <div className="flex justify-between items-start">
-              <div className="flex-1 ">
-                <div className="flex flex-wrap items-center space-x-2">
-                  <p className="font-medium text-gray-700">
-                    Fecha de contacto:
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatearFecha(observacion.created_at, true)}
-                  </p>
+            {editandoId === observacion.id ? (
+              // Modo edición
+              <div>
+                <div className="mb-3">
+                  <p className="font-medium text-gray-700 mb-2">Fecha de contacto:</p>
+                  <input
+                    type="datetime-local"
+                    value={fechaEditando}
+                    onChange={(e) => setFechaEditando(e.target.value)}
+                    className="w-full lg:w-auto text-sm border border-gray-300 bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loadingObservaciones}
+                  />
                 </div>
-                <div className="flex flex-wrap items-center space-x-2 mb-3">
-                  <p className="font-medium text-gray-700">Creador nota:</p>
-                  <p className="text-sm text-gray-500">
-                    {observacion.nombre_vendedor
-                      ? observacion.nombre_vendedor
-                      : vacio()}
-                  </p>
+                <div className="mb-3">
+                  <p className="font-medium text-gray-700 mb-2">Creador nota:</p>
+                  <select
+                    value={vendedorEditando}
+                    onChange={(e) => setVendedorEditando(e.target.value)}
+                    className="w-full lg:w-auto text-sm border border-gray-300 bg-gray-50 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={loadingObservaciones}
+                  >
+                    {vendedores.map((vendedor) => (
+                      <option key={vendedor.id} value={vendedor.id}>
+                        {vendedor.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <textarea
+                  value={textoEditando}
+                  onChange={(e) => setTextoEditando(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 bg-gray-50 text-gray-700 mb-3"
+                  rows={4}
+                  disabled={loadingObservaciones}
+                />
+                <div className="flex flex-col md:flex-row justify-end space-y-2 md:space-y-0 md:space-x-3 mt-4">
+                  <button
+                    onClick={handleGuardarEdicion}
+                    disabled={loadingObservaciones || !textoEditando.trim()}
+                    className="w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Guardar cambios
+                  </button>
+                  <button
+                    onClick={handleCancelarEdicion}
+                    disabled={loadingObservaciones}
+                    className="w-full md:w-auto bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancelar
+                  </button>
                 </div>
               </div>
-            </div>
-            <p className="text-gray-700 whitespace-pre-wrap break-words">
-              {observacion.observacion}
-            </p>
-            <div className="flex justify-end">
-              <button
-                onClick={() =>
-                  handleBorrarObservacion(observacion.id as number)
-                }
-                className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors cursor-pointer"
-                title="Borrar observación"
-              >
-                <Trash size={16} />
-              </button>
-            </div>
+            ) : (
+              // Modo visualización
+              <div>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 ">
+                    <div className="flex flex-wrap items-center space-x-2">
+                      <p className="font-medium text-gray-700">
+                        Fecha de contacto:
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {formatearFecha(observacion.created_at, true)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center space-x-2 mb-3">
+                      <p className="font-medium text-gray-700">Creador nota:</p>
+                      <p className="text-sm text-gray-500">
+                        {observacion.nombre_vendedor
+                          ? observacion.nombre_vendedor
+                          : vacio()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-gray-700 whitespace-pre-wrap break-words">
+                  {observacion.observacion}
+                </p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => handleEditarObservacion(observacion)}
+                    disabled={loadingObservaciones}
+                    className="text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-50 transition-colors cursor-pointer disabled:opacity-50"
+                    title="Editar observación"
+                  >
+                    <SquarePen size={16} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleBorrarObservacion(observacion.id as number)
+                    }
+                    disabled={loadingObservaciones}
+                    className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
+                    title="Borrar observación"
+                  >
+                    <Trash size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))
       ) : (
@@ -384,7 +594,9 @@ export const ObservacionesCliente = ({
           <label
             htmlFor="fechaObservacion"
             className="block text-sm font-medium text-gray-700 mb-1"
-          ></label>
+          >
+            Fecha de contacto:
+          </label>
           <input
             id="fechaObservacion"
             type="datetime-local"
@@ -393,6 +605,27 @@ export const ObservacionesCliente = ({
             onChange={(e) => setFechaObservacion(e.target.value)}
             disabled={loadingObservaciones}
           />
+        </div>
+        <div className="mb-4">
+          <label
+            htmlFor="vendedorObservacion"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Creador de la nota:
+          </label>
+          <select
+            id="vendedorObservacion"
+            value={vendedorSeleccionado}
+            onChange={(e) => setVendedorSeleccionado(e.target.value)}
+            className="w-full border border-gray-200 bg-white rounded-lg p-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            disabled={loadingObservaciones}
+          >
+            {vendedores.map((vendedor) => (
+              <option key={vendedor.id} value={vendedor.id}>
+                {vendedor.nombre}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           onClick={handleAgregarNota}

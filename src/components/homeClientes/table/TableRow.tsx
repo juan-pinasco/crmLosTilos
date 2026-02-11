@@ -84,6 +84,9 @@ const TableRow: React.FC<TableRowProps> = ({
           <Bookmark size={20} fill={marked ? 'currentColor' : 'none'} />
         </button>
       </td>
+      {selectedColumns['created_at'] && (
+        <DateCell date={cliente.created_at} />
+      )}
       {selectedColumns['ultima_interaccion'] && (
         <DateCell date={cliente.ultima_interaccion} />
       )}

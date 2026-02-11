@@ -69,6 +69,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
 
   // Definir las columnas disponibles para la tabla de clientes
   const availableColumns = [
+    { key: 'created_at', label: 'Fecha de\nCreación' },
     { key: 'ultima_interaccion', label: 'Última\nInteracción' },
     { key: 'nombre', label: 'Nombre' },
     { key: 'email', label: 'Email' },
@@ -87,6 +88,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
 
   // Definir las columnas seleccionadas por defecto
   const defaultSelectedColumns = {
+    'created_at': true,
     'ultima_interaccion': true,
     'fecha_recontacto': true,
     'nombre': true,
@@ -179,7 +181,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
           }
           
           // Para fechas, formatear antes de buscar
-          if (key === 'ultima_interaccion' || key === 'fecha_recontacto') {
+          if (key === 'ultima_interaccion' || key === 'fecha_recontacto' || key === 'created_at') {
             return formatearFecha(value as string, true).toLowerCase().includes(searchTerm.toLowerCase());
           }
           
@@ -213,7 +215,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
     if (sortConfig.key && sortConfig.direction) {
       sortableClientes.sort((a, b) => {
         // Manejar fechas especialmente
-        if (sortConfig.key === 'ultima_interaccion' || sortConfig.key === 'fecha_recontacto') {
+        if (sortConfig.key === 'ultima_interaccion' || sortConfig.key === 'fecha_recontacto' || sortConfig.key === 'created_at') {
           // Manejo seguro de fechas nulas
           const dateA = a[sortConfig.key as keyof Cliente] ? new Date(a[sortConfig.key as keyof Cliente] as string).getTime() : 0;
           const dateB = b[sortConfig.key as keyof Cliente] ? new Date(b[sortConfig.key as keyof Cliente] as string).getTime() : 0;

@@ -5,7 +5,8 @@ import type { Vendedor } from "../../types/SellersType";
 import type { Evento } from "../../types/EventsType";
 import { formatearFecha } from "../../utils/dateUtils";
 import { fetchEventosByCliente } from "../../data/EventosCrud";
-import { updateCliente, updateFechaRecontacto } from "../../data/ClientsCrud";
+import { updateCliente, updateFechaRecontacto, updateUltimaInteraccion } from "../../data/ClientsCrud";
+import { fetchObservacionesByClienteId } from "../../data/ObservacionesCrud";
 import { ESTADO_CLIENTE_COLORS, obtenerEstadosCliente } from "../../constants/estadosCliente";
 import { TEMPERATURA_CLIENTE_COLORS, TEMPERATURAS_CLIENTE } from "../../constants/temperaturasCliente";
 import { TIPO_CLIENTE_COLORS, TIPOS_CLIENTE } from "../../constants/tiposCliente";
@@ -75,6 +76,18 @@ export const InformacionClienteInline = ({
     return vendedor ? vendedor.nombre : vacio();
   };
 
+  // Función para convertir fecha ISO a formato datetime-local
+  const convertirADatetimeLocal = (isoDate: string): string => {
+    if (!isoDate) return "";
+    const fecha = new Date(isoDate);
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, "0");
+    const day = String(fecha.getDate()).padStart(2, "0");
+    const hours = String(fecha.getHours()).padStart(2, "0");
+    const minutes = String(fecha.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
   // Función para obtener la fecha más lejana de los eventos
   const obtenerFechaMasLejana = (eventos: Evento[]): string | null => {
     if (!eventos || eventos.length === 0) return null;
@@ -90,11 +103,12 @@ export const InformacionClienteInline = ({
     return eventosOrdenados[0]?.fecha_realizacion || null;
   };
 
-  // Cargar eventos del cliente solo al inicializar el componente
+  // Cargar eventos y verificar observaciones del cliente al inicializar el componente
   useEffect(() => {
-    const cargarEventos = async () => {
+    const cargarDatos = async () => {
       if (cliente.id) {
         try {
+          // Cargar eventos
           const eventosCliente = await fetchEventosByCliente(cliente.id);
 
           // Actualizar la fecha de recontacto con la más lejana
@@ -108,21 +122,61 @@ export const InformacionClienteInline = ({
               `Fecha de recontacto actualizada para cliente ${cliente.id}: ${fechaMasLejana}`
             );
           }
+
+          // Verificar si el cliente tiene observaciones
+          const observaciones = await fetchObservacionesByClienteId(cliente.id);
+          
+          // Si no hay observaciones, actualizar última interacción con fecha de creación
+          if (!observaciones || observaciones.length === 0) {
+            if (cliente.created_at) {
+              await updateUltimaInteraccion(cliente.id, cliente.created_at);
+              
+              // Actualizar el estado local
+              setClienteLocal({
+                ...cliente,
+                ultima_interaccion: cliente.created_at,
+              });
+              
+              console.log(
+                `Cliente sin observaciones. Última interacción actualizada con fecha de creación: ${cliente.created_at}`
+              );
+            }
+          }
         } catch (error) {
-          console.error("Error al cargar eventos del cliente:", error);
+          console.error("Error al cargar datos del cliente:", error);
         }
       }
     };
 
-    // Solo cargar eventos una vez al inicializar el componente
-    cargarEventos();
+    // Solo cargar datos una vez al inicializar el componente
+    cargarDatos();
   }, []);
 
   // Manejador para guardar los cambios
   const handleGuardarCambios = async () => {
     try {
+      // Verificar si se modificó la fecha de creación
+      const fechaCreacionModificada = clienteEditado.created_at !== cliente.created_at;
+      
       const clienteActualizado = await updateCliente(cliente.id, clienteEditado);
       if (clienteActualizado) {
+        // Si se modificó la fecha de creación, verificar si hay observaciones
+        if (fechaCreacionModificada) {
+          const observaciones = await fetchObservacionesByClienteId(cliente.id);
+          
+          // Si no hay observaciones, actualizar última interacción con la nueva fecha de creación
+          if (!observaciones || observaciones.length === 0) {
+            await updateUltimaInteraccion(cliente.id, clienteEditado.created_at);
+            
+            // Actualizar el cliente con la nueva última interacción
+            clienteActualizado.ultima_interaccion = clienteEditado.created_at;
+            
+            console.log(
+              `Fecha de creación modificada sin observaciones. Última interacción actualizada: ${clienteEditado.created_at}`
+            );
+          }
+        }
+        
         setClienteLocal(clienteActualizado);
         setIsEditing(false);
         
@@ -488,10 +542,23 @@ export const InformacionClienteInline = ({
           {/* Información de fecha */}
           <div className="flex flex-row justify-between w-full">
             <div className="mb-2 w-1/3 pr-2">
-              <h3 className="text-gray-500 text-sm">Fecha de creación</h3>
-              <div className="max-w-full break-words whitespace-pre-wrap overflow-y-auto p-1 rounded-md">
-                {formatearFecha(clienteLocal.created_at) || vacio()}
-              </div>
+              {renderField(
+                "Fecha de creación",
+                isEditing ? (
+                  <input
+                    type="datetime-local"
+                    value={convertirADatetimeLocal(clienteEditado.created_at)}
+                    onChange={(e) => {
+                      const fechaSeleccionada = e.target.value;
+                      const fechaISO = fechaSeleccionada ? new Date(fechaSeleccionada).toISOString() : new Date().toISOString();
+                      setClienteEditado({...clienteEditado, created_at: fechaISO});
+                    }}
+                    className="w-full p-2 border rounded-md focus:ring-2 bg-white focus:ring-blue-500 focus:border-transparent"
+                  />
+                ) : (
+                  formatearFecha(clienteLocal.created_at) || vacio()
+                )
+              )}
             </div>
             <div className="mb-2 w-1/3 px-2">
               <h3 className="text-gray-500 text-sm">Ultima interacción</h3>

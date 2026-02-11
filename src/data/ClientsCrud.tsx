@@ -28,7 +28,7 @@ export const fetchClientes = async () => {
         fecha_recontacto
       `
       )
-      .order("ultima_interaccion", { ascending: true });
+      .order("created_at", { ascending: true });
 
     if (error) {
       throw error;

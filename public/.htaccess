@@ -1,4 +1,15 @@
 RewriteEngine On
+
+# Forzar HTTPS (redirige http -> https)
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# (Opcional) Forzar sin www (si tu dominio canónico es sin www)
+# Descomenta estas 2 líneas si ves que te redirige a www.
+#RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+#RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+# Reglas SPA (mantener)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
