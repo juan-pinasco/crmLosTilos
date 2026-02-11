@@ -21,6 +21,19 @@ import {
 export const CreateClient = () => {
   const navigate = useNavigate();
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
+  
+  // Función para obtener la fecha y hora actual en formato datetime-local
+  const getFechaActual = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+  
+  const [fechaCreacion, setFechaCreacion] = useState<string>(getFechaActual());
   const [formData, setFormData] = useState<Omit<Cliente, "id" | "created_at">>({
     nombre: "",
     descripcion: "",
@@ -79,10 +92,13 @@ export const CreateClient = () => {
       // Obtener el usuario actual
       const currentUser = await GetSession();
 
-      // Crear una copia del formData con el created_by actualizado
+      // Crear una copia del formData con el created_by, created_at y ultima_interaccion actualizados
+      const fechaCreacionISO = fechaCreacion ? new Date(fechaCreacion).toISOString() : new Date().toISOString();
       const clienteData = {
         ...formData,
         created_by: currentUser?.email || "sistema",
+        created_at: fechaCreacionISO,
+        ultima_interaccion: fechaCreacionISO, // La última interacción es la fecha de creación
       };
 
       const clienteCreado = await create(clienteData as Cliente);
@@ -91,7 +107,7 @@ export const CreateClient = () => {
       if (clienteCreado && clienteCreado[0]) {
         navigate(`/profile-client/${clienteCreado[0].id}`);
       } else {
-        setError("Error al crear el cliente. No se recibió confirmación del servidor.");
+        setError("Error al crear el cliente. Es probable que el cliente ya exista. No pueden existir dos clientes con el mismo numero de telefono. En este caso busca el cliente y agregale una nueva Observacion.");
       }
       //navigate("/"); // Redirigir a la página principal después de crear
     } catch (err) {
@@ -210,6 +226,23 @@ export const CreateClient = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="fechaCreacion"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Fecha de creación
+                </label>
+                <input
+                  type="datetime-local"
+                  name="fechaCreacion"
+                  id="fechaCreacion"
+                  value={fechaCreacion}
+                  onChange={(e) => setFechaCreacion(e.target.value)}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"
+                />
               </div>
 
               {/*  <div>

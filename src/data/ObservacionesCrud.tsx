@@ -155,6 +155,42 @@ export const createObservacion = async (observacion: Observacion) => {
   }
 };
 
+// Actualizar una observación
+export const updateObservacion = async (id: number, observacion: string, created_at?: string, id_vendedor?: string) => {
+  try {
+    const updateData: any = {
+      observacion: observacion.trim()
+    };
+
+    // Si se proporciona created_at, incluirlo en la actualización
+    if (created_at) {
+      updateData.created_at = new Date(created_at).toISOString();
+    }
+
+    // Si se proporciona id_vendedor, incluirlo en la actualización
+    if (id_vendedor !== undefined) {
+      updateData.id_vendedor = id_vendedor || null;
+    }
+
+    const { data, error } = await supabase
+      .from("observaciones_cliente")
+      .update(updateData)
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("Error de Supabase al actualizar observación:", error);
+      throw error;
+    }
+
+    console.log("Observación actualizada exitosamente:", data);
+    return data;
+  } catch (error) {
+    console.error("Error al actualizar la observación:", error);
+    return null;
+  }
+};
+
 // Eliminar una observación
 export const deleteObservacion = async (id: number) => {
   try {
