@@ -1,43 +1,71 @@
-import { supabase } from "../integrations/supabase";
 import type { Cliente } from "../types/ClientsType";
 import Swal from "sweetalert2";
 
+// Helper para obtener el token de autenticación
+const getAuthToken = () => {
+  const authKeys = Object.keys(localStorage).filter(key => 
+    key.startsWith('sb-') && key.includes('-auth-token')
+  );
+  
+  if (authKeys.length === 0) {
+    throw new Error('No se encontró token de autenticación');
+  }
+  
+  const authData = JSON.parse(localStorage.getItem(authKeys[0]) || '{}');
+  const token = authData?.access_token;
+  
+  if (!token) {
+    throw new Error('No se encontró access token');
+  }
+  
+  return token;
+};
+
+// Helper para hacer fetch con timeout
+const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 10000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
+
 export const fetchClientes = async () => {
   try {
-    // Consulta explícita para obtener clientes con todos sus campos, incluyendo created_by
-    const { data, error } = await supabase
-      .from("clientes")
-      .select(
-        `
-        id,
-        created_at,
-        nombre,
-        descripcion,
-        email,
-        telefono,
-        pais,
-        ciudad,
-        barrio,
-        tipo_cliente,
-        estado,
-        temperatura,
-        vendedor_id,
-        ultima_interaccion,
-        created_by,
-        empleo,
-        fecha_recontacto
-      `
-      )
-      .order("created_at", { ascending: true });
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes?select=id,created_at,nombre,descripcion,email,telefono,pais,ciudad,barrio,tipo_cliente,estado,temperatura,vendedor_id,ultima_interaccion,created_by,empleo,fecha_recontacto&order=created_at.asc`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-    if (error) {
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
+    const data = await response.json();
+
     if (data) {
-      console.log("Clientes:", data);
       // Procesar los teléfonos con formato 'no-phone-'
-      const clientesProcesados = data.map((cliente) => {
+      const clientesProcesados = data.map((cliente: Cliente) => {
         if (cliente.telefono && cliente.telefono.startsWith("no-phone-")) {
           return {
             ...cliente,
@@ -49,7 +77,7 @@ export const fetchClientes = async () => {
       return clientesProcesados;
     }
   } catch (error) {
-    console.error("Error al obtener los clientes:", error);
+    throw error;
   }
 };
 
@@ -67,17 +95,22 @@ export const deleteClient = async (id: string): Promise<boolean> => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          console.log(`Intentando eliminar cliente con ID: ${id}`);
+          const token = getAuthToken();
           
           // Verificar si el cliente existe antes de intentar eliminarlo
-          const { data: clienteExistente, error: errorConsulta } = await supabase
-            .from("clientes")
-            .select("id")
-            .eq("id", id)
-            .single();
+          const checkResponse = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes?id=eq.${id}&select=id`,
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
           
-          if (errorConsulta) {
-            console.error("Error al verificar si el cliente existe:", errorConsulta);
+          if (!checkResponse.ok) {
             Swal.fire({
               icon: "error",
               title: "Error",
@@ -87,8 +120,9 @@ export const deleteClient = async (id: string): Promise<boolean> => {
             return;
           }
           
-          if (!clienteExistente) {
-            console.error(`No se encontró ningún cliente con ID: ${id}`);
+          const clienteExistente = await checkResponse.json();
+          
+          if (!clienteExistente || clienteExistente.length === 0) {
             Swal.fire({
               icon: "error",
               title: "Error",
@@ -99,13 +133,19 @@ export const deleteClient = async (id: string): Promise<boolean> => {
           }
           
           // Intentar eliminar el cliente
-          const { error } = await supabase
-            .from("clientes")
-            .delete()
-            .eq("id", id);
+          const deleteResponse = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes?id=eq.${id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
 
-          if (error) {
-            console.error("Error al eliminar el cliente:", error);
+          if (!deleteResponse.ok) {
             Swal.fire({
               icon: "error",
               title: "Error",
@@ -115,7 +155,6 @@ export const deleteClient = async (id: string): Promise<boolean> => {
             return;
           }
           
-          console.log(`Cliente con ID: ${id} eliminado correctamente`);
           Swal.fire({
             icon: "success",
             title: "Cliente eliminado",
@@ -124,7 +163,6 @@ export const deleteClient = async (id: string): Promise<boolean> => {
           });
           resolve(true);
         } catch (error) {
-          console.error("Error inesperado al eliminar el cliente:", error);
           Swal.fire({
             icon: "error",
             title: "Error inesperado",
@@ -148,64 +186,73 @@ export const create = async (cliente: Cliente) => {
       cliente.telefono = `no-phone-${randomId}`;
     }
 
-    const { data, error } = await supabase
-      .from("clientes")
-      .insert([cliente])
-      .select();
-
-    if (error) {
-      throw error;
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(cliente)
+      }
+    );
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
-
-    if (data) {
+    
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
       return data;
+    } else {
+      return [{ ...cliente, id: 'temp-id' }];
     }
+    
   } catch (error) {
-    console.error("Error al crear el cliente:", error);
+    throw error;
   }
 };
 
 export const fetchClienteById = async (id: string) => {
   try {
-    const { data, error } = await supabase
-      .from("clientes")
-      .select(
-        `
-        id,
-        created_at,
-        nombre,
-        descripcion,
-        email,
-        telefono,
-        pais,
-        ciudad,
-        barrio,
-        tipo_cliente,
-        estado,
-        temperatura,
-        vendedor_id,
-        ultima_interaccion,
-        created_by,
-        empleo,
-        fecha_recontacto
-      `
-      )
-      .eq("id", id)
-      .single();
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes?id=eq.${id}&select=id,created_at,nombre,descripcion,email,telefono,pais,ciudad,barrio,tipo_cliente,estado,temperatura,vendedor_id,ultima_interaccion,created_by,empleo,fecha_recontacto`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-    if (error) {
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    if (data) {
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      const cliente = data[0];
+      
       // Procesar el teléfono si tiene formato 'no-phone-'
-      if (data.telefono && data.telefono.startsWith("no-phone-")) {
-        data.telefono = null; // Establecer como null para que se muestre "Sin datos"
+      if (cliente.telefono && cliente.telefono.startsWith("no-phone-")) {
+        cliente.telefono = null; // Establecer como null para que se muestre "Sin datos"
       }
-      return data;
+      return cliente;
     }
   } catch (error) {
-    console.error("Error al obtener el cliente:", error);
     return null;
   }
 };
@@ -213,26 +260,30 @@ export const fetchClienteById = async (id: string) => {
 // Actualizar la fecha de última interacción del cliente
 export const updateUltimaInteraccion = async (id: string, fecha: string) => {
   try {
-    console.log(`Actualizando última interacción del cliente ${id} a ${fecha}`);
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes?id=eq.${id}&select=id,created_at,nombre,descripcion,email,telefono,pais,ciudad,barrio,tipo_cliente,estado,temperatura,vendedor_id,ultima_interaccion,created_by,empleo,fecha_recontacto`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ ultima_interaccion: fecha })
+      }
+    );
 
-    const { data, error } = await supabase
-      .from("clientes")
-      .update({ ultima_interaccion: fecha })
-      .eq("id", id)
-      .select();
-
-    if (error) {
-      console.error("Error al actualizar la última interacción:", error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    console.log("Cliente actualizado correctamente:", data);
+    const data = await response.json();
     return data;
   } catch (error) {
-    console.error(
-      "Error al actualizar la última interacción del cliente:",
-      error
-    );
     return null;
   }
 };
@@ -243,30 +294,30 @@ export const updateFechaRecontacto = async (
   fecha: string | null
 ) => {
   try {
-    console.log(
-      `Actualizando fecha de recontacto del cliente ${id} a ${
-        fecha === null ? "NULL" : fecha
-      }`
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes?id=eq.${id}&select=id,created_at,nombre,descripcion,email,telefono,pais,ciudad,barrio,tipo_cliente,estado,temperatura,vendedor_id,ultima_interaccion,created_by,empleo,fecha_recontacto`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ fecha_recontacto: fecha })
+      }
     );
 
-    const { data, error } = await supabase
-      .from("clientes")
-      .update({ fecha_recontacto: fecha })
-      .eq("id", id)
-      .select();
-
-    if (error) {
-      console.error("Error al actualizar la fecha de recontacto:", error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    console.log("Fecha de recontacto actualizada correctamente:", data);
+    const data = await response.json();
     return data;
   } catch (error) {
-    console.error(
-      "Error al actualizar la fecha de recontacto del cliente:",
-      error
-    );
     return null;
   }
 };
@@ -277,28 +328,36 @@ export const updateCliente = async (
   clienteData: Partial<Cliente>
 ) => {
   try {
-    console.log(`Actualizando datos del cliente ${id}:`, clienteData);
     // Asegurar que el teléfono tenga un valor único si está vacío
     if (clienteData.telefono === null || clienteData.telefono === "") {
       const randomId = Math.random().toString(36).substring(2, 10);
       clienteData.telefono = `no-phone-${randomId}`;
     }
 
-    const { data, error } = await supabase
-      .from("clientes")
-      .update(clienteData)
-      .eq("id", id)
-      .select();
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/clientes?id=eq.${id}&select=id,created_at,nombre,descripcion,email,telefono,pais,ciudad,barrio,tipo_cliente,estado,temperatura,vendedor_id,ultima_interaccion,created_by,empleo,fecha_recontacto`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(clienteData)
+      }
+    );
 
-    if (error) {
-      console.error("Error al actualizar el cliente:", error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    console.log("Cliente actualizado correctamente:", data);
+    const data = await response.json();
     return data[0];
   } catch (error) {
-    console.error("Error al actualizar el cliente:", error);
     return null;
   }
 };

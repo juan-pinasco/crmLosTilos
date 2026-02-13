@@ -70,29 +70,94 @@ export const crearEvento = async (eventoData: {
     
     console.log("Datos del evento a crear:", nuevoEvento);
     
-    const { data, error } = await supabase
-      .from("eventos")
-      .insert([nuevoEvento])
-      .select();
-    
-    if (error) {
-      console.error("Error de Supabase al crear evento:", error);
-      throw error;
+    // Obtener token de autenticación del localStorage
+    const authKeys = Object.keys(localStorage).filter(key => 
+      key.startsWith('sb-') && key.includes('-auth-token')
+    );
+
+    if (authKeys.length === 0) {
+      throw new Error('No se encontró token de autenticación');
     }
+
+    const authData = JSON.parse(localStorage.getItem(authKeys[0]) || '{}');
+    const token = authData?.access_token;
+
+    if (!token) {
+      throw new Error('No se encontró access token');
+    }
+
+    // Hacer fetch directo con timeout manual
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+    let data: any;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/eventos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(nuevoEvento),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+      
+      data = await response.json();
+      
+      console.log("Evento creado exitosamente");
     
-    console.log("Evento creado exitosamente");
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      throw fetchError;
+    }
     
     // Si se creó el evento correctamente, hacer una consulta adicional para obtener el evento con la información del vendedor
     if (data && data.length > 0) {
       const eventoId = data[0].id;
-      const { data: eventoConVendedor, error: errorConsulta } = await supabase
-        .from("eventos")
-        .select(`
-          *,
-          vendedor:tarea_vendedor_id(id, nombre)
-        `)
-        .eq("id", eventoId)
-        .single();
+      
+      // Hacer fetch directo para obtener evento con vendedor
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+      let eventoConVendedor: any;
+      let errorConsulta: any;
+
+      try {
+        const response = await fetch(`${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/eventos?id=eq.${eventoId}&select=*,vendedor:tarea_vendedor_id(id,nombre)`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const responseData = await response.json();
+        eventoConVendedor = responseData[0]; // Supabase devuelve array
+        errorConsulta = null;
+        
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        errorConsulta = fetchError;
+        eventoConVendedor = null;
+      }
       
       if (errorConsulta) {
         console.error("Error al obtener evento con vendedor:", errorConsulta);

@@ -8,7 +8,10 @@ import type { Cliente } from "../../types/ClientsType";
 import type { Vendedor } from "../../types/SellersType";
 import { GetSession } from "../../data/AuthsCrud";
 import { Search } from "lucide-react";
-import { ESTADOS_TAREA, ESTADO_TAREA_DEFAULT } from "../../constants/estadosTareas";
+import {
+  ESTADOS_TAREA,
+  ESTADO_TAREA_DEFAULT,
+} from "../../constants/estadosTareas";
 
 export const CreateEvento = () => {
   const navigate = useNavigate();
@@ -17,7 +20,7 @@ export const CreateEvento = () => {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  
+
   // Estado para los datos del formulario
   const [formData, setFormData] = useState({
     titulo: "",
@@ -28,7 +31,7 @@ export const CreateEvento = () => {
     tarea_client_id: "",
     tarea_vendedor_id: "",
   });
-  
+
   // Estado para el campo de búsqueda de clientes
   const [clienteSearch, setClienteSearch] = useState("");
   const [clientesFiltrados, setClientesFiltrados] = useState<Cliente[]>([]);
@@ -40,9 +43,9 @@ export const CreateEvento = () => {
   useEffect(() => {
     // Revisar si viene fecha en query params
     const params = new URLSearchParams(location.search);
-    const fechaQuery = params.get('fecha');
+    const fechaQuery = params.get("fecha");
     if (fechaQuery) {
-      setFormData(prev => ({ ...prev, fecha_realizacion: fechaQuery }));
+      setFormData((prev) => ({ ...prev, fecha_realizacion: fechaQuery }));
     }
   }, [location.search]);
 
@@ -78,49 +81,53 @@ export const CreateEvento = () => {
   }, []);
 
   // Manejar cambios en los campos del formulario
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
   };
-  
+
   // Manejar la búsqueda de clientes
   const handleClienteSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value.toLowerCase();
     setClienteSearch(searchTerm);
-    
+
     if (searchTerm.trim() === "") {
       setClientesFiltrados([]);
       setShowClienteDropdown(false);
       return;
     }
-    
-    const filtered = clientes.filter(cliente => 
-      cliente.nombre.toLowerCase().includes(searchTerm)
+
+    const filtered = clientes.filter((cliente) =>
+      cliente.nombre.toLowerCase().includes(searchTerm),
     );
-    
+
     setClientesFiltrados(filtered);
     setShowClienteDropdown(true);
   };
-  
+
   // Seleccionar un cliente
   const selectCliente = (cliente: Cliente | null) => {
     if (cliente) {
       setFormData({
         ...formData,
-        tarea_client_id: cliente.id
+        tarea_client_id: cliente.id,
       });
       setSelectedClienteNombre(cliente.nombre);
     } else {
       setFormData({
         ...formData,
-        tarea_client_id: ""
+        tarea_client_id: "",
       });
       setSelectedClienteNombre("");
     }
-    
+
     setClienteSearch("");
     setClientesFiltrados([]);
     setShowClienteDropdown(false);
@@ -134,12 +141,12 @@ export const CreateEvento = () => {
     try {
       // Obtener los valores del formulario
       const fecha = formData.fecha_realizacion; // YYYY-MM-DD
-      const hora = formData.hora_realizacion;   // HH:MM
-      
+      const hora = formData.hora_realizacion; // HH:MM
+
       // Crear una fecha local con los valores del formulario
       const fechaHoraLocal = `${fecha}T${hora}:00`;
       const fechaLocal = new Date(fechaHoraLocal);
-      
+
       // Convertir a UTC usando el método toISOString() que siempre devuelve en UTC
       const fechaUTC = fechaLocal.toISOString();
 
@@ -156,12 +163,18 @@ export const CreateEvento = () => {
       console.log("Fecha y hora local ingresada:", fechaHoraLocal);
       console.log("Guardando evento con fecha UTC:", fechaUTC);
       await crearEvento(eventoData);
-      
+
       // Navegar al perfil del cliente si hay un cliente seleccionado, o a la página de eventos si no
       if (formData.tarea_client_id) {
         navigate(`/profile-client/${formData.tarea_client_id}`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       } else {
         navigate("/eventos");
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       }
     } catch (error) {
       console.error("Error al crear el evento:", error);
@@ -178,7 +191,12 @@ export const CreateEvento = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Crear Nueva Tarea</h1>
           <button
-            onClick={() => navigate("/eventos")}
+            onClick={() => {
+              navigate("/eventos");
+              setTimeout(() => {
+                window.location.reload();
+              }, 100);
+            }}
             className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded"
           >
             Cancelar
@@ -195,7 +213,10 @@ export const CreateEvento = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Título */}
                 <div className="col-span-2">
-                  <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="titulo"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Título *
                   </label>
                   <input
@@ -211,7 +232,10 @@ export const CreateEvento = () => {
 
                 {/* Descripción */}
                 <div className="col-span-2">
-                  <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="descripcion"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Descripción (opcional)
                   </label>
                   <textarea
@@ -226,7 +250,10 @@ export const CreateEvento = () => {
 
                 {/* Fecha de realización */}
                 <div>
-                  <label htmlFor="fecha_realizacion" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="fecha_realizacion"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Fecha de realización *
                   </label>
                   <input
@@ -242,7 +269,10 @@ export const CreateEvento = () => {
 
                 {/* Hora de realización */}
                 <div>
-                  <label htmlFor="hora_realizacion" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="hora_realizacion"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Hora de realización *
                   </label>
                   <input
@@ -258,7 +288,10 @@ export const CreateEvento = () => {
 
                 {/* Estado de la tarea */}
                 <div>
-                  <label htmlFor="estado_tarea" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="estado_tarea"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Estado *
                   </label>
                   <select
@@ -279,7 +312,10 @@ export const CreateEvento = () => {
 
                 {/* Cliente - Campo de búsqueda */}
                 <div className="relative">
-                  <label htmlFor="cliente_search" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="cliente_search"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Cliente *
                   </label>
                   <div className="relative">
@@ -298,10 +334,13 @@ export const CreateEvento = () => {
                     />
                     {selectedClienteNombre && (
                       <div className="mt-1 text-base text-blue-600">
-                        Cliente seleccionado: <span className="font-medium">{selectedClienteNombre}</span>
-                        <button 
-                          type="button" 
-                          onClick={() => selectCliente(null)} 
+                        Cliente seleccionado:{" "}
+                        <span className="font-medium">
+                          {selectedClienteNombre}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => selectCliente(null)}
                           className="cursor-pointer ml-3 text-red-500 hover:text-red-700"
                         >
                           Quitar
@@ -309,13 +348,13 @@ export const CreateEvento = () => {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Dropdown de resultados */}
                   {showClienteDropdown && clientesFiltrados.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-300 max-h-60 overflow-auto">
                       <ul className="py-1">
-                        {clientesFiltrados.map(cliente => (
-                          <li 
+                        {clientesFiltrados.map((cliente) => (
+                          <li
                             key={cliente.id}
                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                             onClick={() => selectCliente(cliente)}
@@ -326,18 +365,21 @@ export const CreateEvento = () => {
                       </ul>
                     </div>
                   )}
-                  
+
                   {/* Campo oculto para mantener el ID del cliente seleccionado */}
-                  <input 
-                    type="hidden" 
-                    name="tarea_client_id" 
-                    value={formData.tarea_client_id} 
+                  <input
+                    type="hidden"
+                    name="tarea_client_id"
+                    value={formData.tarea_client_id}
                   />
                 </div>
 
                 {/* Ejecutor */}
                 <div>
-                  <label htmlFor="tarea_vendedor_id" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label
+                    htmlFor="tarea_vendedor_id"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
                     Vendedor Ejecutor *
                   </label>
                   <select

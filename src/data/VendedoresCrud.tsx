@@ -1,104 +1,207 @@
-import { supabase } from "../integrations/supabase";
 import type { Vendedor } from "../types/SellersType";
+
+// Helper para obtener el token de autenticación
+const getAuthToken = () => {
+  const authKeys = Object.keys(localStorage).filter(key => 
+    key.startsWith('sb-') && key.includes('-auth-token')
+  );
+  
+  if (authKeys.length === 0) {
+    throw new Error('No se encontró token de autenticación');
+  }
+  
+  const authData = JSON.parse(localStorage.getItem(authKeys[0]) || '{}');
+  const token = authData?.access_token;
+  
+  if (!token) {
+    throw new Error('No se encontró access token');
+  }
+  
+  return token;
+};
+
+// Helper para hacer fetch con timeout
+const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 10000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
 
 export const fetchVendedores = async () => {
     try {
-        const { data, error } = await supabase.from("vendedores").select("*");
+        const token = getAuthToken();
+        
+        const response = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/vendedores?select=*`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
 
-        if (error) {
-            throw error;
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
+        const data = await response.json();
+        
         if (data) {
-            console.log("Vendedores:",data);
             return data;
         }
     } catch (error) {
-        console.error("Error al obtener los vendedores:", error);
     }
 };
 
 export const fetchVendedorById = async (id: string) => {
     try {
-        const { data, error } = await supabase.from("vendedores").select("*").eq("id", id).single();
+        const token = getAuthToken();
+        
+        const response = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/vendedores?id=eq.${id}&select=*`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
 
-        if (error) {
-            throw error;
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
-        if (data) {
-            console.log("Vendedor:",data);
-            return data;
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            return data[0];
         }
     } catch (error) {
-        console.error("Error al obtener el vendedor:", error);
     }
 };
 
 export const fetchVendedorByAuthId = async (authUserId: string) => {
     try {
-        const { data, error } = await supabase
-            .from("vendedores")
-            .select("*")
-            .eq("auth_user_id", authUserId)
-            .single();
+        const token = getAuthToken();
+        
+        const response = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/vendedores?auth_user_id=eq.${authUserId}&select=*`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
 
-        if (error) {
-            console.error("Error al obtener el vendedor por auth_user_id:", error);
+        if (!response.ok) {
             return null;
         }
 
-        return data;
+        const data = await response.json();
+        
+        if (data && data.length > 0) {
+            return data[0];
+        }
+        
+        return null;
     } catch (error) {
-        console.error("Error al obtener el vendedor por auth_user_id:", error);
         return null;
     }
 };
 
 export const updateVendedor = async (id: string, updates: Partial<Vendedor>) => {
     try {
+        const token = getAuthToken();
+        
         // Verificamos que el vendedor existe
-        const { data: existingVendedor, error: checkError } = await supabase
-            .from("vendedores")
-            .select("*")
-            .eq("id", id)
-            .single();
-            
-        if (checkError) {
-            console.error("Error al verificar el vendedor:", checkError);
+        const checkResponse = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/vendedores?id=eq.${id}&select=*`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
+        
+        if (!checkResponse.ok) {
+            return { success: false, error: "No se encontró el vendedor" };
+        }
+        
+        const existingVendedor = await checkResponse.json();
+        
+        if (!existingVendedor || existingVendedor.length === 0) {
             return { success: false, error: "No se encontró el vendedor" };
         }
         
         // Realizamos la actualización
-        const { error } = await supabase
-            .from("vendedores")
-            .update(updates)
-            .eq("id", id);
+        const updateResponse = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/vendedores?id=eq.${id}`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(updates)
+            }
+        );
             
-        if (error) {
-            console.error("Error al actualizar el vendedor:", error);
-            return { success: false, error: error.message };
+        if (!updateResponse.ok) {
+            const errorText = await updateResponse.text();
+            return { success: false, error: errorText };
         }
         
         // Obtenemos el vendedor actualizado
-        const { data: updatedVendedor, error: fetchError } = await supabase
-            .from("vendedores")
-            .select("*")
-            .eq("id", id)
-            .single();
+        const fetchResponse = await fetchWithTimeout(
+            `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/vendedores?id=eq.${id}&select=*`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${token}`
+                }
+            }
+        );
             
-        if (fetchError) {
-            console.error("Error al obtener el vendedor actualizado:", fetchError);
+        if (!fetchResponse.ok) {
             // Si no podemos obtener el vendedor actualizado, devolvemos el original con las actualizaciones
             return { 
                 success: true, 
-                data: { ...existingVendedor, ...updates } 
+                data: { ...existingVendedor[0], ...updates } 
             };
         }
         
-        return { success: true, data: updatedVendedor };
+        const updatedVendedor = await fetchResponse.json();
+        
+        return { success: true, data: updatedVendedor[0] };
     } catch (error: any) {
-        console.error("Error al actualizar el vendedor:", error);
         return { success: false, error: error.message || "Error desconocido" };
     }
 };

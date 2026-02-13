@@ -1,54 +1,96 @@
-import { supabase } from "../integrations/supabase";
 import type { Observacion } from "../types/ObservationsType";
+
+// Helper para obtener el token de autenticación
+const getAuthToken = () => {
+  const authKeys = Object.keys(localStorage).filter(key => 
+    key.startsWith('sb-') && key.includes('-auth-token')
+  );
+  
+  if (authKeys.length === 0) {
+    throw new Error('No se encontró token de autenticación');
+  }
+  
+  const authData = JSON.parse(localStorage.getItem(authKeys[0]) || '{}');
+  const token = authData?.access_token;
+  
+  if (!token) {
+    throw new Error('No se encontró access token');
+  }
+  
+  return token;
+};
+
+// Helper para hacer fetch con timeout
+const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 10000) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+};
 
 // Obtener todas las observaciones
 export const fetchObservaciones = async () => {
   try {
-    const { data, error } = await supabase
-      .from("observaciones_cliente")
-      .select(`
-        id,
-        created_at,
-        id_cliente,
-        id_vendedor,
-        observacion
-      `)
-      .order("created_at", { ascending: false });
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/observaciones_cliente?select=id,created_at,id_cliente,id_vendedor,observacion&order=created_at.desc`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-    if (error) {
-      console.error("Error de Supabase al obtener observaciones:", error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
+    const data = await response.json();
     return data || [];
   } catch (error) {
-    console.error("Error al obtener las observaciones:", error);
     return [];
   }
 };
 
-// Obtener todas las observaciones de un cliente
 export const fetchObservacionesByClienteId = async (clienteId: string) => {
   try {
-    console.log("Buscando observaciones para cliente ID:", clienteId);
+    const token = getAuthToken();
     
     // Primero obtenemos las observaciones
-    const { data: observaciones, error } = await supabase
-      .from("observaciones_cliente")
-      .select(`
-        id,
-        created_at,
-        id_cliente,
-        id_vendedor,
-        observacion
-      `)
-      .eq("id_cliente", clienteId)
-      .order("created_at", { ascending: true });
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/observaciones_cliente?id_cliente=eq.${clienteId}&select=id,created_at,id_cliente,id_vendedor,observacion&order=created_at.asc`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-    if (error) {
-      console.error("Error de Supabase al obtener observaciones:", error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
+
+    const observaciones = await response.json();
 
     // Si no hay observaciones, retornamos un array vacío
     if (!observaciones || observaciones.length === 0) {
@@ -57,48 +99,54 @@ export const fetchObservacionesByClienteId = async (clienteId: string) => {
 
     // Obtenemos los IDs únicos de vendedores
     const vendedorIds = observaciones
-      .map(obs => obs.id_vendedor)
-      .filter(id => id !== null && id !== undefined);
+      .map((obs: any) => obs.id_vendedor)
+      .filter((id: any) => id !== null && id !== undefined);
     
     // Si no hay vendedores, retornamos las observaciones sin nombres de vendedor
     if (vendedorIds.length === 0) {
-      return observaciones.map(obs => ({
+      return observaciones.map((obs: any) => ({
         ...obs,
         nombre_vendedor: null
       }));
     }
 
     // Obtenemos los datos de los vendedores
-    const { data: vendedores, error: vendedoresError } = await supabase
-      .from("vendedores")
-      .select("id, nombre")
-      .in("id", vendedorIds);
+    const vendedoresResponse = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/vendedores?id=in.(${vendedorIds.join(',')})&select=id,nombre`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-    if (vendedoresError) {
-      console.error("Error al obtener vendedores:", vendedoresError);
+    if (!vendedoresResponse.ok) {
       // Si hay error, retornamos las observaciones sin nombres de vendedor
-      return observaciones.map(obs => ({
+      return observaciones.map((obs: any) => ({
         ...obs,
         nombre_vendedor: null
       }));
     }
 
+    const vendedores = await vendedoresResponse.json();
+
     // Creamos un mapa de id -> nombre para los vendedores
-    const vendedoresMap = vendedores.reduce<Record<string, string>>((map, vendedor) => {
+    const vendedoresMap = vendedores.reduce((map: Record<string, string>, vendedor: { id: string; nombre: string }) => {
       map[vendedor.id] = vendedor.nombre;
       return map;
-    }, {});
+    }, {} as Record<string, string>);
 
     // Combinamos los datos
-    const observacionesConNombreVendedor = observaciones.map(obs => ({
+    const observacionesConNombreVendedor = observaciones.map((obs: any) => ({
       ...obs,
       nombre_vendedor: obs.id_vendedor ? vendedoresMap[obs.id_vendedor] || null : null
     }));
 
-    console.log("Observaciones encontradas:", observacionesConNombreVendedor);
     return observacionesConNombreVendedor;
   } catch (error) {
-    console.error("Error al obtener las observaciones del cliente:", error);
     return [];
   }
 };
@@ -106,16 +154,12 @@ export const fetchObservacionesByClienteId = async (clienteId: string) => {
 // Crear una nueva observación
 export const createObservacion = async (observacion: Observacion) => {
   try {
-    console.log("Intentando crear observación:", observacion);
-    
     // Validar que los campos requeridos estén presentes
     if (!observacion.id_cliente) {
-      console.error("Error: id_cliente es requerido");
       return null;
     }
     
     if (!observacion.observacion || observacion.observacion.trim() === '') {
-      console.error("Error: observacion es requerida y no puede estar vacía");
       return null;
     }
     
@@ -135,22 +179,30 @@ export const createObservacion = async (observacion: Observacion) => {
         : new Date().toISOString()
     };
     
-    console.log("Datos a insertar en Supabase:", nuevaObservacion);
+    const token = getAuthToken();
     
-    const { data, error } = await supabase
-      .from("observaciones_cliente")
-      .insert([nuevaObservacion])
-      .select(); // Añadir .select() para obtener los datos insertados
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/observaciones_cliente`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify([nuevaObservacion])
+      }
+    );
 
-    if (error) {
-      console.error("Error de Supabase al crear observación:", error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    console.log("Observación creada exitosamente:", data);
+    const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error al crear la observación:", error);
     return null;
   }
 };
@@ -172,21 +224,30 @@ export const updateObservacion = async (id: number, observacion: string, created
       updateData.id_vendedor = id_vendedor || null;
     }
 
-    const { data, error } = await supabase
-      .from("observaciones_cliente")
-      .update(updateData)
-      .eq("id", id)
-      .select();
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/observaciones_cliente?id=eq.${id}&select=id,created_at,id_cliente,id_vendedor,observacion`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`,
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(updateData)
+      }
+    );
 
-    if (error) {
-      console.error("Error de Supabase al actualizar observación:", error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    console.log("Observación actualizada exitosamente:", data);
+    const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error al actualizar la observación:", error);
     return null;
   }
 };
@@ -194,18 +255,27 @@ export const updateObservacion = async (id: number, observacion: string, created
 // Eliminar una observación
 export const deleteObservacion = async (id: number) => {
   try {
-    const { error } = await supabase
-      .from("observaciones_cliente")
-      .delete()
-      .eq("id", id);
+    const token = getAuthToken();
+    
+    const response = await fetchWithTimeout(
+      `${import.meta.env.VITE_APP_SUPABASE_URL}/rest/v1/observaciones_cliente?id=eq.${id}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_APP_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
 
-    if (error) {
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
     return true;
   } catch (error) {
-    console.error("Error al eliminar la observación:", error);
     return false;
   }
 };

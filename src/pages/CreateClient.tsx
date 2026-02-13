@@ -2,7 +2,6 @@ import { Header } from "../components/Header";
 import { useState, useEffect } from "react";
 import { create } from "../data/ClientsCrud";
 import { fetchVendedores } from "../data/VendedoresCrud";
-import { GetSession } from "../data/AuthsCrud";
 import type { Cliente } from "../types/ClientsType";
 import type { Vendedor } from "../types/SellersType";
 import { useNavigate } from "react-router";
@@ -21,7 +20,7 @@ import {
 export const CreateClient = () => {
   const navigate = useNavigate();
   const [vendedores, setVendedores] = useState<Vendedor[]>([]);
-  
+
   // Función para obtener la fecha y hora actual en formato datetime-local
   const getFechaActual = () => {
     const now = new Date();
@@ -32,7 +31,7 @@ export const CreateClient = () => {
     const minutes = String(now.getMinutes()).padStart(2, "0");
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
-  
+
   const [fechaCreacion, setFechaCreacion] = useState<string>(getFechaActual());
   const [formData, setFormData] = useState<Omit<Cliente, "id" | "created_at">>({
     nombre: "",
@@ -74,7 +73,7 @@ export const CreateClient = () => {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -84,36 +83,67 @@ export const CreateClient = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("🟡 [H1] handleSubmit iniciado");
     e.preventDefault();
+    console.log("🟡 [H2] setLoading(true)");
     setLoading(true);
     setError(null);
+    console.log("🟡 [H3] Error null, loading true");
 
     try {
+      console.log("🟡 [H4] Entrando al try block");
       // Obtener el usuario actual
-      const currentUser = await GetSession();
+      console.log("🟡 [H5] Obteniendo email del localStorage");
+      // Obtener email directamente del localStorage para evitar cuelgues
+      const authKeys = Object.keys(localStorage).filter(
+        (key) => key.startsWith("sb-") && key.includes("-auth-token"),
+      );
+
+      let userEmail = "sistema";
+      if (authKeys.length > 0) {
+        const authData = JSON.parse(localStorage.getItem(authKeys[0]) || "{}");
+        userEmail = authData?.user?.email || authData?.email || "sistema";
+      }
+
+      console.log("🟡 [H6] Email obtenido del localStorage:", userEmail);
 
       // Crear una copia del formData con el created_by, created_at y ultima_interaccion actualizados
-      const fechaCreacionISO = fechaCreacion ? new Date(fechaCreacion).toISOString() : new Date().toISOString();
+      const fechaCreacionISO = fechaCreacion
+        ? new Date(fechaCreacion).toISOString()
+        : new Date().toISOString();
       const clienteData = {
         ...formData,
-        created_by: currentUser?.email || "sistema",
+        created_by: userEmail,
         created_at: fechaCreacionISO,
         ultima_interaccion: fechaCreacionISO, // La última interacción es la fecha de creación
       };
+      console.log("🟡 [H7] Datos del cliente preparados:", clienteData);
 
+      console.log("🟡 [H8] Llamando a create()");
       const clienteCreado = await create(clienteData as Cliente);
       console.log("Cliente creado exitosamente:", clienteCreado);
-      
+
       if (clienteCreado && clienteCreado[0]) {
+        console.log("🟡 [H9] Navegando al perfil del cliente");
         navigate(`/profile-client/${clienteCreado[0].id}`);
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       } else {
-        setError("Error al crear el cliente. Es probable que el cliente ya exista. No pueden existir dos clientes con el mismo numero de telefono. En este caso busca el cliente y agregale una nueva Observacion.");
+        console.log("🟡 [H10] Error: cliente no creado");
+        setError(
+          "Error al crear el cliente. Es probable que el cliente ya exista. No pueden existir dos clientes con el mismo numero de telefono. En este caso busca el cliente y agregale una nueva Observacion.",
+        );
       }
       //navigate("/"); // Redirigir a la página principal después de crear
     } catch (err) {
-      setError("Error al crear el cliente. Por favor, inténtelo de nuevo.");
+      console.log("🔴 [H11] Error en handleSubmit:", err);
+      setError(
+        "Error al crear el cliente. Es posible que el teléfono del cliente ya exista. Búscalo en la tabla de clientes y agrégale una observación.",
+      );
       console.error(err);
     } finally {
+      console.log("🟢 [H12] Finally block - setLoading(false)");
       setLoading(false);
     }
   };
@@ -128,7 +158,8 @@ export const CreateClient = () => {
               Crear Nuevo Cliente
             </h1>
             <p className="mt-1 text-sm text-gray-500">
-              Complete los campos para crear nuevo cliente. "Nombre" y "Vendedor asignado" son requeridos
+              Complete los campos para crear nuevo cliente. "Nombre" y "Vendedor
+              asignado" son requeridos
             </p>
           </div>
 
@@ -191,13 +222,20 @@ export const CreateClient = () => {
                   type="tel"
                   name="telefono"
                   id="telefono"
-                  value={formData.telefono === null || formData.telefono?.startsWith('no-phone-') ? '' : formData.telefono}
+                  value={
+                    formData.telefono === null ||
+                    formData.telefono?.startsWith("no-phone-")
+                      ? ""
+                      : formData.telefono
+                  }
                   onChange={(e) => {
                     const value = e.target.value.trim();
-                    const randomId = Math.random().toString(36).substring(2, 10);
-                    setFormData(prev => ({
+                    const randomId = Math.random()
+                      .toString(36)
+                      .substring(2, 10);
+                    setFormData((prev) => ({
                       ...prev,
-                      telefono: value === '' ? `no-phone-${randomId}` : value
+                      telefono: value === "" ? `no-phone-${randomId}` : value,
                     }));
                   }}
                   className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md p-2"
@@ -400,7 +438,12 @@ export const CreateClient = () => {
             <div className="mt-8 flex justify-end">
               <button
                 type="button"
-                onClick={() => navigate("/")}
+                onClick={() => {
+                  navigate("/");
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 100);
+                }}
                 className="mr-3 bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 Cancelar
