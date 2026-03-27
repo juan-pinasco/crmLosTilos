@@ -4,13 +4,15 @@
  */
 
 // Tipos de cliente disponibles
-export const TIPOS_CLIENTE = ["Particular", "Empresa", "Inmobiliario"];
+export const TIPOS_CLIENTE = ["Reunion","Visita","Particular", "Empresa", "Inmobiliario"];
 
 // Tipo por defecto para nuevos clientes
 export const TIPO_CLIENTE_DEFAULT = "Particular";
 
 // Mapeo de tipos a clases de colores para Tailwind CSS
 export const TIPO_CLIENTE_COLORS: Record<string, string> = {
+  "Reunion": "bg-blue-100 text-blue-800",
+  "Visita": "bg-yellow-100 text-yellow-800",
   "Particular": "bg-purple-100 text-purple-800",
   "Empresa": "bg-green-100 text-green-800",
   "Inmobiliario": "bg-gray-100 text-gray-800"
