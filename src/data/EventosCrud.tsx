@@ -36,7 +36,7 @@ export const fetchEventosByCliente = async (clienteId: string) => {
         vendedor:tarea_vendedor_id(id, nombre)
       `)
       .eq("tarea_client_id", clienteId)
-      .order("fecha_realizacion", { ascending: true });
+      .order("created_at", { ascending: false });
     
     if (error) {
       console.error("Error al obtener eventos:", error);

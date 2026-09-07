@@ -188,7 +188,7 @@ export const RecontactoCliente = ({
 
       // Actualizar la lista de eventos y la fecha de recontacto
       const eventosActualizados = nuevoEventoCreado
-        ? [...eventos, nuevoEventoCreado]
+        ? [nuevoEventoCreado, ...eventos]
         : eventos;
       setEventos(eventosActualizados);
       actualizarFechaRecontacto(eventosActualizados);
