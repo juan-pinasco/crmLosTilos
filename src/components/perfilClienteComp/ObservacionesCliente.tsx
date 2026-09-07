@@ -224,15 +224,6 @@ export const ObservacionesCliente = ({
                 setVendedorSeleccionado("");
               }
 
-              // Mostrar alerta de éxito
-              Swal.fire({
-                icon: "success",
-                title: "¡Observación agregada!",
-                text: "La observación ha sido guardada correctamente",
-                confirmButtonColor: "#10B981",
-                timer: 2000,
-                timerProgressBar: true,
-              });
             } else {
               Swal.fire({
                 icon: "error",
@@ -426,15 +417,6 @@ export const ObservacionesCliente = ({
               }
             }
 
-            // Mostrar alerta de éxito
-            Swal.fire({
-              icon: "success",
-              title: "Observación eliminada",
-              text: "La observación ha sido eliminada correctamente",
-              confirmButtonColor: "#10B981",
-              timer: 2000,
-              timerProgressBar: true,
-            });
           } else {
             // Mostrar alerta de error
             Swal.fire({

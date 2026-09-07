@@ -224,14 +224,6 @@ export const RecontactoCliente = ({
 
       // Actualizar fecha de recontacto
       actualizarFechaRecontacto(eventosActualizados);
-      
-      // Mostrar mensaje de éxito
-      Swal.fire({
-        icon: "success",
-        title: "Evento eliminado",
-        text: "El evento ha sido eliminado correctamente",
-        timer: 2000
-      });
     } catch (err) {
       console.error("Error al eliminar evento:", err);
       setError("Error al eliminar el evento");
@@ -304,13 +296,6 @@ export const RecontactoCliente = ({
         
         // Actualizar la fecha de recontacto basada en los eventos actualizados
         await actualizarFechaRecontacto(eventosActualizados);
-        
-        // Mostrar mensaje de éxito
-        Swal.fire({
-          icon: "success",
-          title: "Estado actualizado",
-          timer: 2000
-        });
       } else {
         throw new Error("No se pudo actualizar el estado del evento");
       }
