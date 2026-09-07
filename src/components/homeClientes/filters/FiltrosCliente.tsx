@@ -138,7 +138,7 @@ export const FiltrosCliente = ({ onFiltrosChange, initialFiltros }: FiltrosClien
         <div className="border-t border-gray-400" />
          {/* Filtro por tipo de cliente */}
          <div>
-          <h3 className="font-medium text-gray-700 mb-2">Tipo de Cliente</h3>
+          <h3 className="font-medium text-gray-700 mb-2">Reunión/Visita</h3>
           <div className="space-y-2">
             {TIPOS_CLIENTE.map(tipo => (
               <label key={`tipo-${tipo}`} className="cursor-pointer flex items-center">

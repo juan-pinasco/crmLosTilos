@@ -78,7 +78,7 @@ export const ClientesTable: React.FC<ClientesTableProps> = ({
     { key: 'pais', label: 'País' },
     { key: 'ciudad', label: 'Ciudad' },
     { key: 'barrio', label: 'Barrio' },
-    { key: 'tipo_cliente', label: 'Tipo Cliente' },
+    { key: 'tipo_cliente', label: 'Reunión/Visita' },
     { key: 'estado', label: 'Estado' },
     { key: 'temperatura', label: 'Temperatura' },
     { key: 'fecha_recontacto', label: 'Fecha a\ncontactar' },

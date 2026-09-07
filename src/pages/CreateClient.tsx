@@ -373,7 +373,7 @@ export const CreateClient = () => {
                   htmlFor="tipo_cliente"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Tipo de Cliente
+                  Reunión/Visita
                 </label>
                 <select
                   name="tipo_cliente"

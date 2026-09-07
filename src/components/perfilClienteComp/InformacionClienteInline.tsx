@@ -412,7 +412,7 @@ export const InformacionClienteInline = ({
             {/* Tipo de cliente */}
             <div className="mb-2 w-1/3 pl-2">
               {renderField(
-                "Tipo de cliente",
+                "Reunión/Visita",
                 isEditing ? (
                   <div  ref={tipoClienteDropdownRef}>
                     <div 
